@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>المسّاح الرقمي ومصمم الأوتوكاد الذكي</title>
+    <title>المسّاح الرقمي - الكروكي والفرز والتجنيب وتصميم الأوتوكاد</title>
     
     <!-- خط القاهرة -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -40,7 +40,7 @@
         }
 
         header h1 {
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -79,7 +79,7 @@
 
         /* القائمة الجانبية */
         .sidebar {
-            width: 430px;
+            width: 450px;
             background: #ffffff;
             box-shadow: -2px 0 15px rgba(0,0,0,0.2);
             display: flex;
@@ -128,7 +128,7 @@
             display: flex;
         }
 
-        /* منطقة العرض الرئيسية (خريطة / لوحة كروكي / لوحة أوتوكاد) */
+        /* منطقة العرض الرئيسية */
         .workspace {
             flex: 1;
             height: 100%;
@@ -155,7 +155,6 @@
             cursor: crosshair;
         }
 
-        /* تنسيق لوحات الرسم (Canvas) */
         .canvas-wrapper {
             width: 100%;
             height: 100%;
@@ -163,7 +162,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 15px;
+            padding: 12px;
             overflow: auto;
         }
 
@@ -174,12 +173,17 @@
             border-radius: 6px;
         }
 
-        /* الكروت والعناصر داخل الشريط الجانبي */
+        /* الكروت */
         .card {
             background: #f8fafc;
             border: 1px solid #e2e8f0;
             border-radius: 8px;
             padding: 10px;
+        }
+
+        .card-highlight {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
         }
 
         .card-title {
@@ -196,7 +200,7 @@
             display: flex;
             justify-content: space-between;
             margin-bottom: 4px;
-            font-size: 0.85rem;
+            font-size: 0.84rem;
         }
 
         .result-value {
@@ -216,18 +220,18 @@
             background: #eff6ff;
             border: 1px solid #bfdbfe;
             border-radius: 6px;
-            padding: 5px 3px;
+            padding: 4px 3px;
         }
 
         .unit-box span {
             display: block;
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 700;
             color: #1d4ed8;
         }
 
         .unit-box small {
-            font-size: 0.72rem;
+            font-size: 0.7rem;
             color: #475569;
         }
 
@@ -242,7 +246,7 @@
             padding: 7px 10px;
             border: none;
             border-radius: 6px;
-            font-size: 0.82rem;
+            font-size: 0.8rem;
             font-weight: 600;
             cursor: pointer;
             transition: 0.2s;
@@ -273,7 +277,7 @@
         .coords-list {
             max-height: 150px;
             overflow-y: auto;
-            font-size: 0.75rem;
+            font-size: 0.74rem;
             border: 1px solid #e2e8f0;
             border-radius: 6px;
             background: #fff;
@@ -294,6 +298,7 @@
             background: #f1f5f9;
             position: sticky;
             top: 0;
+            color: #1e293b;
         }
 
         /* حقول الإدخال */
@@ -301,7 +306,7 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 7px;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
 
         .input-group {
@@ -315,16 +320,16 @@
         }
 
         .input-group label {
-            font-size: 0.75rem;
+            font-size: 0.74rem;
             font-weight: 700;
             color: #334155;
         }
 
         .input-group input, .input-group select {
-            padding: 6px 8px;
+            padding: 5px 8px;
             border: 1px solid #cbd5e1;
             border-radius: 5px;
-            font-size: 0.82rem;
+            font-size: 0.8rem;
             outline: none;
             background: #fff;
         }
@@ -367,10 +372,10 @@
             }
             .sidebar {
                 width: 100%;
-                height: 52%;
+                height: 54%;
             }
             .workspace {
-                height: 48%;
+                height: 46%;
             }
         }
     </style>
@@ -378,10 +383,10 @@
 <body>
 
     <header>
-        <h1>📐 المسّاح الرقمي ومصمم الأوتوكاد الذكي</h1>
+        <h1>📐 المسّاح الرقمي - الكروكي والفرز والتجنيب و AutoCAD</h1>
         <div class="view-switcher">
             <button class="view-btn active" id="btn-view-map" onclick="showWorkspace('map-pane')">🗺️ الخريطة</button>
-            <button class="view-btn" id="btn-view-sketch" onclick="showWorkspace('sketch-pane')">📏 لوحة الكروكي المساحي</button>
+            <button class="view-btn" id="btn-view-sketch" onclick="showWorkspace('sketch-pane')">📏 لوحة الكروكي والفرز</button>
             <button class="view-btn" id="btn-view-cad" onclick="showWorkspace('cad-pane')">🏠 لوحة تصميم الأوتوكاد</button>
         </div>
     </header>
@@ -392,7 +397,7 @@
             
             <div class="tabs">
                 <button class="tab-btn active" onclick="switchTab('map-tab', this, 'map-pane')">🗺️ الخريطة</button>
-                <button class="tab-btn" onclick="switchTab('manual-tab', this, 'sketch-pane')">📏 كروكي وأضلاع</button>
+                <button class="tab-btn" onclick="switchTab('manual-tab', this, 'sketch-pane')">✂️ كروكي وفرز</button>
                 <button class="tab-btn" onclick="switchTab('cad-tab', this, 'cad-pane')">🏠 تصميم CAD</button>
                 <button class="tab-btn" onclick="switchTab('cogo-tab', this, 'map-pane')">🧭 COGO</button>
             </div>
@@ -438,10 +443,11 @@
                 </div>
             </div>
 
-            <!-- 2. تبويب حاسبة الأضلاع وإخراج الكروكي المساحي -->
+            <!-- 2. تبويب حاسبة الأضلاع وإخراج الكروكي والفرز والتجنيب -->
             <div id="manual-tab" class="tab-content">
+                <!-- أضلاع الأرض -->
                 <div class="card">
-                    <div class="card-title">أطوال الأضلاع الأربعة والوتر (بالمتر)</div>
+                    <div class="card-title">1. أطوال الأضلاع الأربعة والوتر (بالمتر)</div>
                     <div class="input-grid">
                         <div class="input-group">
                             <label>الضلع العلوي (بحري/شمال):</label>
@@ -461,48 +467,106 @@
                         </div>
                         <div class="input-group">
                             <label style="color:#2563eb;">طول الوتر (القطر):</label>
-                            <input type="number" id="side-diag" value="44.72" step="any">
+                            <input type="number" id="side-diag" value="44.72" step="any" oninput="calculateAndDrawSketch()">
                         </div>
                         <div class="input-group" style="justify-content: flex-end;">
-                            <button class="btn-dark" onclick="setRightAngleDiagonal()" title="يحسب الوتر تلقائياً باعتبار الأرض قائمة الزوايا">⚡ زاوية قائمة</button>
+                            <button class="btn-dark" onclick="setRightAngleDiagonal()" title="يحسب الوتر تلقائياً للزوايا القائمة">⚡ زاوية قائمة</button>
                         </div>
+                    </div>
+                </div>
+
+                <!-- أداة الفرز والتجنيب (تقسيم الأرض) -->
+                <div class="card card-highlight">
+                    <div class="card-title" style="border-color:#10b981; color:#065f46;">2. ✂️ تقسيم الأرض (فرز وتجنيب للورثة / البيع)</div>
+                    <div class="input-grid">
+                        <div class="input-group">
+                            <label>نظام التقسيم (الفرز):</label>
+                            <select id="subdiv-mode" onchange="toggleSubdivInputs()">
+                                <option value="none">بدون تقسيم (قطعة واحدة)</option>
+                                <option value="equal" selected>تقسيم قطع متساوية المساحة</option>
+                                <option value="shares">تقسيم بالحصص والأسهم (ورثة/شركاء)</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>اتجاه خطوط التقسيم:</label>
+                            <select id="subdiv-dir" onchange="calculateAndDrawSketch()">
+                                <option value="vertical">طولي (التقسيم على البحري والقبلي)</option>
+                                <option value="horizontal">عرضي (التقسيم على الشرقي والغربي)</option>
+                            </select>
+                        </div>
+
+                        <!-- يظهر في حالة التقسيم المتساوي -->
+                        <div class="input-group" id="group-equal-count">
+                            <label>عدد القطع المطلوبة:</label>
+                            <input type="number" id="subdiv-count" value="4" min="2" max="20" oninput="calculateAndDrawSketch()">
+                        </div>
+
+                        <!-- خيار إظهار الوتر -->
+                        <div class="input-group" id="group-diag-toggle">
+                            <label>خط الوتر على الرسمة:</label>
+                            <select id="show-diag" onchange="calculateAndDrawSketch()">
+                                <option value="hide" selected>إخفاء الوتر عند التقسيم (أوضح)</option>
+                                <option value="show">إظهار خط الوتر ومقاسه</option>
+                            </select>
+                        </div>
+
+                        <!-- يظهر في حالة التقسيم بالحصص والأسهم -->
+                        <div class="input-group full" id="group-custom-shares" style="display:none;">
+                            <label style="color:#047857;">أدخل (الاسم:الحصة) أو الأسهم مفصولة بفاصلة (,):</label>
+                            <input type="text" id="subdiv-shares" value="ورثة أول:2, ورثة ثاني:1, ورثة ثالث:1" placeholder="مثال: أحمد:2, محمد:1, ليلى:1" oninput="calculateAndDrawSketch()">
+                        </div>
+                    </div>
+
+                    <!-- جدول نتائج الفرز والتجنيب -->
+                    <div id="subdiv-table-wrapper" class="coords-list" style="max-height: 115px; margin-top:4px;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>القطعة / الحصة</th>
+                                    <th>المساحة (م²)</th>
+                                    <th>فدان / قيراط / سهم</th>
+                                    <th>الواجهتين (م)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="subdiv-tbody"></tbody>
+                        </table>
                     </div>
                 </div>
 
                 <!-- بيانات الجيران والأوفست والمهندس -->
                 <div class="card">
-                    <div class="card-title">بيانات الجيران واللوحة (الكروكي)</div>
+                    <div class="card-title">3. بيانات الجيران واللوحة الهندسية</div>
                     <div class="input-grid">
                         <div class="input-group">
                             <label>الحد البحري (فوق):</label>
-                            <input type="text" id="neigh-n" value="شارع عمومي عرض 10 م">
+                            <input type="text" id="neigh-n" value="شارع عمومي عرض 10 م" oninput="calculateAndDrawSketch()">
                         </div>
                         <div class="input-group">
                             <label>الحد القبلي (تحت):</label>
-                            <input type="text" id="neigh-s" value="جار - ملك ورثة فلان">
+                            <input type="text" id="neigh-s" value="جار - ملك ورثة فلان" oninput="calculateAndDrawSketch()">
                         </div>
                         <div class="input-group">
                             <label>الحد الشرقي (يمين):</label>
-                            <input type="text" id="neigh-e" value="جار مبني">
+                            <input type="text" id="neigh-e" value="جار مبني" oninput="calculateAndDrawSketch()">
                         </div>
                         <div class="input-group">
                             <label>الحد الغربي (شمال):</label>
-                            <input type="text" id="neigh-w" value="ممر خاص عرض 4 م">
+                            <input type="text" id="neigh-w" value="ممر خاص عرض 4 م" oninput="calculateAndDrawSketch()">
                         </div>
                         <div class="input-group">
                             <label>اسم المهندس / المسّاح:</label>
-                            <input type="text" id="eng-name" value="م. أحمد سمير">
+                            <input type="text" id="eng-name" value="م. أحمد سمير" oninput="calculateAndDrawSketch()">
                         </div>
                         <div class="input-group">
                             <label>اسم المالك / المشروع:</label>
-                            <input type="text" id="owner-name" value="رفع مساحي لقطعة أرض">
+                            <input type="text" id="owner-name" value="كروكي فرز وتجنيب قطعة أرض" oninput="calculateAndDrawSketch()">
                         </div>
                         <div class="input-group">
-                            <label>مسافة أوفست الأبعاد (Offset):</label>
-                            <input type="range" id="dim-offset" min="20" max="65" value="36" oninput="calculateAndDrawSketch()">
+                            <label>أوفست الأبعاد الخارجية:</label>
+                            <input type="range" id="dim-offset" min="25" max="75" value="44" oninput="calculateAndDrawSketch()">
                         </div>
                         <div class="input-group">
-                            <label>نمط لوحة الكروكي:</label>
+                            <label>نمط اللوحة:</label>
                             <select id="sketch-theme" onchange="calculateAndDrawSketch()">
                                 <option value="light">لوحة هندسية بيضاء (طباعة)</option>
                                 <option value="cad">لوحة أوتوكاد داكنة (CAD)</option>
@@ -511,16 +575,17 @@
                     </div>
 
                     <div class="controls">
-                        <button class="btn-primary span-2" onclick="calculateAndDrawSketch()">📐 احسب وارسم الكروكي المساحي</button>
-                        <button class="btn-success" onclick="downloadCanvas('sketchCanvas', 'Survey_Sketch.png')">📥 حفظ صورة PNG</button>
-                        <button class="btn-warning" onclick="sendDimensionsToCAD()">🏠 صممها كمنزل بـ CAD</button>
+                        <button class="btn-primary" onclick="calculateAndDrawSketch()">📐 تحديث الكروكي</button>
+                        <button class="btn-dark" onclick="exportSketchDXF()">📐 تصدير الكروكي (.DXF)</button>
+                        <button class="btn-success" onclick="downloadCanvas('sketchCanvas', 'Cadastral_Subdivision_Sketch.png')">📥 حفظ صورة PNG</button>
+                        <button class="btn-warning" onclick="sendDimensionsToCAD()">🏠 صمم قطعة بـ CAD</button>
                     </div>
                 </div>
 
-                <!-- ملخص المساحة -->
+                <!-- ملخص المساحة الكلية -->
                 <div class="card">
                     <div class="result-item">
-                        <span>المساحة الإجمالية (م1 + م2):</span>
+                        <span>المساحة الإجمالية للأرض:</span>
                         <span class="result-value" id="manual-total-m2" style="color:#2563eb;">800.00 م²</span>
                     </div>
                     <div class="feddan-box">
@@ -536,7 +601,7 @@
                 <div class="card">
                     <div class="card-title">🤖 مساعد التصميم المعماري (AutoCAD AI)</div>
                     <p style="font-size: 0.74rem; color: #475569; margin-bottom: 8px;">
-                        يقوم بتقسيم قطعة الأرض تلقائياً إلى مسقط أفقي لمنزل مصري بالأبعاد والحوائط والأبواب والمناور مع إمكانية التصدير لبرنامج AutoCAD.
+                        يقوم بتوليد مسقط أفقي لمنزل مصري بالحوائط والأبواب والمناور مع التصدير لبرنامج AutoCAD.
                     </p>
                     <div class="input-grid">
                         <div class="input-group">
@@ -581,12 +646,9 @@
                     </div>
                 </div>
 
-                <!-- تقرير التقسيم المعماري -->
                 <div class="card" style="flex:1;">
                     <div class="card-title">تقرير المساحات وعناصر التصميم</div>
-                    <div id="cad-report" style="font-size: 0.8rem; color: #334155; line-height: 1.6;">
-                        اضغط على زر التوليد لإظهار تفاصيل الغرف والمساحات.
-                    </div>
+                    <div id="cad-report" style="font-size: 0.8rem; color: #334155; line-height: 1.6;"></div>
                 </div>
             </div>
 
@@ -626,24 +688,21 @@
 
         </div>
 
-        <!-- منطقة العرض الرئيسية (الخريطة + لوحة الكروكي + لوحة الأوتوكاد) -->
+        <!-- منطقة العرض الرئيسية -->
         <div class="workspace">
-            <!-- 1. شاشة الخريطة -->
             <div id="map-pane" class="workspace-pane active">
                 <div id="map"></div>
             </div>
 
-            <!-- 2. شاشة لوحة الكروكي المساحي -->
             <div id="sketch-pane" class="workspace-pane">
                 <div class="canvas-wrapper">
-                    <canvas id="sketchCanvas" width="900" height="650"></canvas>
+                    <canvas id="sketchCanvas" width="940" height="670"></canvas>
                 </div>
             </div>
 
-            <!-- 3. شاشة لوحة تصميم الأوتوكاد الذكي -->
             <div id="cad-pane" class="workspace-pane">
                 <div class="canvas-wrapper">
-                    <canvas id="cadCanvas" width="900" height="650"></canvas>
+                    <canvas id="cadCanvas" width="940" height="670"></canvas>
                 </div>
             </div>
         </div>
@@ -780,16 +839,21 @@
             segmentLabels.push(label);
         }
 
-        function displayFeddan(sqMeters, fId, qId, sId) {
+        function formatFQS(sqMeters) {
             const F = 4200.833333333333, Q = F / 24, S = Q / 24;
             const fed = Math.floor(sqMeters / F);
             const rem1 = sqMeters % F;
             const qir = Math.floor(rem1 / Q);
             const sah = ((rem1 % Q) / S).toFixed(1);
-            document.getElementById(fId).innerText = fed;
-            document.getElementById(qId).innerText = qir;
-            document.getElementById(sId).innerText = sah;
             return { fed, qir, sah };
+        }
+
+        function displayFeddan(sqMeters, fId, qId, sId) {
+            const fqs = formatFQS(sqMeters);
+            if (fId) document.getElementById(fId).innerText = fqs.fed;
+            if (qId) document.getElementById(qId).innerText = fqs.qir;
+            if (sId) document.getElementById(sId).innerText = fqs.sah;
+            return fqs;
         }
 
         function updateUTMTable() {
@@ -833,7 +897,17 @@
             a.click();
         }
 
-        // ================= 2. محرك رسم الكروكي المساحي والأبعاد (Offset Dimensions) =================
+        // ================= 2. محرك الكروكي المساحي + الفرز والتجنيب =================
+        let currentSketchDXF = []; // لحفظ خطوط الكروكي والفرز لتصديرها إلى AutoCAD
+
+        function toggleSubdivInputs() {
+            const mode = document.getElementById('subdiv-mode').value;
+            document.getElementById('group-equal-count').style.display = (mode === 'equal') ? 'flex' : 'none';
+            document.getElementById('group-custom-shares').style.display = (mode === 'shares') ? 'flex' : 'none';
+            document.getElementById('subdiv-table-wrapper').style.display = (mode === 'none') ? 'none' : 'block';
+            calculateAndDrawSketch();
+        }
+
         function heronArea(a, b, c) {
             if (a + b <= c || a + c <= b || b + c <= a) return -1;
             const s = (a + b + c) / 2;
@@ -857,7 +931,88 @@
                 const avgH = (n + s) / 2;
                 const avgV = (e + w) / 2;
                 document.getElementById('side-diag').value = Math.sqrt(avgH * avgH + avgV * avgV).toFixed(2);
+                calculateAndDrawSketch();
             }
+        }
+
+        // دوال مساعدة لحساب الفرز والتجنيب بدقة مساحية
+        function lerpPt(p1, p2, t) {
+            return { x: p1.x + (p2.x - p1.x) * t, y: p1.y + (p2.y - p1.y) * t };
+        }
+
+        function distPt(p1, p2) {
+            return Math.hypot(p2.x - p1.x, p2.y - p1.y);
+        }
+
+        function quadAreaShoelace(p1, p2, p3, p4) {
+            return 0.5 * Math.abs(
+                (p1.x * p2.y - p2.x * p1.y) +
+                (p2.x * p3.y - p3.x * p2.y) +
+                (p3.x * p4.y - p4.x * p3.y) +
+                (p4.x * p1.y - p1.x * p4.y)
+            );
+        }
+
+        // إيجاد نقطة التقسيم الدقيقة على الضلعين المتقابلين لتحقيق نسبة المساحة المطلوبة بالضبط
+        function findExactPartitionParam(pNW, pNE, pSE, pSW, targetAreaRatio, dir) {
+            if (targetAreaRatio <= 0) return 0;
+            if (targetAreaRatio >= 1) return 1;
+
+            const totalA = quadAreaShoelace(pNW, pNE, pSE, pSW);
+            const targetA = targetAreaRatio * totalA;
+
+            let low = 0, high = 1;
+            for (let iter = 0; iter < 35; iter++) {
+                const mid = (low + high) / 2;
+                let currA = 0;
+                if (dir === 'vertical') {
+                    const topP = lerpPt(pNW, pNE, mid);
+                    const botP = lerpPt(pSW, pSE, mid);
+                    currA = quadAreaShoelace(pNW, topP, botP, pSW);
+                } else {
+                    const westP = lerpPt(pNW, pSW, mid);
+                    const eastP = lerpPt(pNE, pSE, mid);
+                    currA = quadAreaShoelace(pNW, pNE, eastP, westP);
+                }
+                if (currA < targetA) low = mid;
+                else high = mid;
+            }
+            return (low + high) / 2;
+        }
+
+        // استخراج قائمة الحصص والأسهم المطلوبة للتقسيم
+        function parseSubdivisionShares() {
+            const mode = document.getElementById('subdiv-mode').value;
+            if (mode === 'none') return [];
+
+            if (mode === 'equal') {
+                const count = Math.max(2, Math.min(20, parseInt(document.getElementById('subdiv-count').value) || 2));
+                const list = [];
+                for (let i = 1; i <= count; i++) {
+                    list.push({ name: `قطعة (${i})`, weight: 1 });
+                }
+                return list;
+            }
+
+            if (mode === 'shares') {
+                const raw = document.getElementById('subdiv-shares').value.trim();
+                if (!raw) return [{ name: 'قطعة (1)', weight: 1 }, { name: 'قطعة (2)', weight: 1 }];
+
+                const parts = raw.split(/[,،-]/).map(s => s.trim()).filter(Boolean);
+                const list = [];
+                parts.forEach((item, idx) => {
+                    if (item.includes(':')) {
+                        const [n, w] = item.split(':');
+                        const val = parseFloat(w);
+                        if (val > 0) list.push({ name: n.trim() || `حصة ${idx + 1}`, weight: val });
+                    } else {
+                        const val = parseFloat(item);
+                        if (val > 0) list.push({ name: `قطعة (${idx + 1}) [${val} س]`, weight: val });
+                    }
+                });
+                return list.length >= 2 ? list : [{ name: 'قطعة (1)', weight: 1 }, { name: 'قطعة (2)', weight: 1 }];
+            }
+            return [];
         }
 
         // رسم خط أبعاد هندسي بالأوفست (Offset Dimension Line)
@@ -867,15 +1022,12 @@
             const len = Math.hypot(dx, dy);
             if (len < 1) return;
 
-            // متجه عمودي للخارج
             const nx = dy / len;
             const ny = -dx / len;
 
-            // نقاط خط البعد بعد عمل الأوفست
             const d1 = { x: p1.x + nx * offsetPx, y: p1.y + ny * offsetPx };
             const d2 = { x: p2.x + nx * offsetPx, y: p2.y + ny * offsetPx };
 
-            // خطوط الامتداد (Extension Lines)
             ctx.save();
             ctx.strokeStyle = isDark ? '#38bdf8' : '#2563eb';
             ctx.lineWidth = 1.2;
@@ -887,14 +1039,12 @@
             ctx.lineTo(d2.x + nx * 6, d2.y + ny * 6);
             ctx.stroke();
 
-            // خط البعد الرئيسي (Dimension Line)
             ctx.setLineDash([]);
             ctx.beginPath();
             ctx.moveTo(d1.x, d1.y);
             ctx.lineTo(d2.x, d2.y);
             ctx.stroke();
 
-            // شرطات الأوتوكاد المائلة عند الأطراف (Architectural Ticks)
             const tickSize = 5;
             [d1, d2].forEach(pt => {
                 ctx.beginPath();
@@ -904,7 +1054,6 @@
                 ctx.stroke();
             });
 
-            // كتابة المقاس في المنتصف
             const midX = (d1.x + d2.x) / 2;
             const midY = (d1.y + d2.y) / 2;
             let angle = Math.atan2(dy, dx);
@@ -913,26 +1062,54 @@
             ctx.translate(midX, midY);
             ctx.rotate(angle);
 
-            // خلفية صغيرة للنص ليكون واضحاً
-            ctx.font = 'bold 13px Cairo';
+            ctx.font = 'bold 12.5px Cairo';
             const textW = ctx.measureText(dimText).width + 10;
             ctx.fillStyle = isDark ? '#0f172a' : '#ffffff';
-            ctx.fillRect(-textW / 2, -11, textW, 20);
+            ctx.fillRect(-textW / 2, -10, textW, 20);
 
             ctx.fillStyle = isDark ? '#facc15' : '#1d4ed8';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(dimText, 0, 0);
 
-            // كتابة اسم الجار / الشارع خارج خط الأبعاد
             if (neighborText) {
-                const outSign = (ny < 0 || nx > 0) ? -1 : 1;
                 ctx.font = '600 12px Cairo';
                 ctx.fillStyle = isDark ? '#cbd5e1' : '#334155';
-                const nOffset = (Math.abs(angle) > 0.1 && nx < 0) ? 20 : -20;
+                const nOffset = (Math.abs(angle) > 0.1 && nx < 0) ? 19 : -19;
                 ctx.fillText(neighborText, 0, nOffset);
             }
 
+            ctx.restore();
+        }
+
+        // كتابة نص موازي لأي ضلع أو خط تقسيم
+        function drawTextAlongSegment(ctx, p1, p2, text, offsetPerp, color, bgColor, fontStr) {
+            const dx = p2.x - p1.x;
+            const dy = p2.y - p1.y;
+            const len = Math.hypot(dx, dy);
+            if (len < 22) return;
+
+            const nx = dy / len;
+            const ny = -dx / len;
+            const mx = (p1.x + p2.x) / 2 + nx * offsetPerp;
+            const my = (p1.y + p2.y) / 2 + ny * offsetPerp;
+
+            let angle = Math.atan2(dy, dx);
+            if (angle > Math.PI / 2 || angle < -Math.PI / 2) angle += Math.PI;
+
+            ctx.save();
+            ctx.translate(mx, my);
+            ctx.rotate(angle);
+            ctx.font = fontStr || 'bold 11px Cairo';
+            const tw = ctx.measureText(text).width + 8;
+            if (bgColor) {
+                ctx.fillStyle = bgColor;
+                ctx.fillRect(-tw / 2, -9, tw, 18);
+            }
+            ctx.fillStyle = color;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, 0, 0);
             ctx.restore();
         }
 
@@ -943,11 +1120,8 @@
             const W = parseFloat(document.getElementById('side-w').value) || 0;
             let D = parseFloat(document.getElementById('side-diag').value) || 0;
 
-            if (N <= 0 || S <= 0 || E <= 0 || W <= 0) {
-                return alert("يرجى إدخال أطوال الأضلاع الأربعة بشكل صحيح.");
-            }
+            if (N <= 0 || S <= 0 || E <= 0 || W <= 0) return;
 
-            // إذا لم يدخل الوتر أو كان غير متقاطع، نحسبه تلقائياً
             let area1 = heronArea(S, W, D);
             let area2 = heronArea(N, E, D);
             if (area1 === -1 || area2 === -1) {
@@ -955,9 +1129,7 @@
                 document.getElementById('side-diag').value = D.toFixed(2);
                 area1 = heronArea(S, W, D);
                 area2 = heronArea(N, E, D);
-                if (area1 === -1 || area2 === -1) {
-                    return alert("الأضلاع المدخلة لا يمكن أن تغلق شكلاً رباعياً هندسياً! راجع الأطوال أو طول الوتر.");
-                }
+                if (area1 === -1 || area2 === -1) return;
             }
 
             const totalArea = area1 + area2;
@@ -965,18 +1137,14 @@
             document.getElementById('manual-total-m2').innerText = totalArea.toFixed(2) + ' م²';
             const fqs = displayFeddan(totalArea, 'm-feddan', 'm-qirat', 'm-sahm');
 
-            // حساب الإحداثيات الهندسية للأركان الأربعة لرسم الكروكي بمقياس رسم حقيقي
-            // نفترض الركن الجنوبي الغربي (SW) عند (0,0) والجنوبي الشرقي (SE) عند (S,0)
-            // والوتر يصل بين الركن الشمالي الغربي (NW) والجنوبي الشرقي (SE)
+            // حساب إحداثيات الأركان الأربعة بالمتر
             const pSW = { x: 0, y: 0 };
             const pSE = { x: S, y: 0 };
 
-            // حساب موقع NW بتقاطع الضلع الغربي W مع الوتر D
             const xNW = (W * W - D * D + S * S) / (2 * S);
             const yNW = Math.sqrt(Math.max(0, W * W - xNW * xNW));
             const pNW = { x: xNW, y: yNW };
 
-            // حساب موقع NE بتقاطع الضلع الشمالي N (من NW) والضلع الشرقي E (من SE)
             const dx = pSE.x - pNW.x;
             const dy = pSE.y - pNW.y;
             const dLen = Math.hypot(dx, dy);
@@ -986,26 +1154,31 @@
             const midDiagX = pNW.x + (aDist / dLen) * dx;
             const midDiagY = pNW.y + (aDist / dLen) * dy;
 
-            // اتجاه الركن الشمالي الشرقي للأعلى واليمين
             const pNE = {
                 x: midDiagX - (hDist / dLen) * dy,
                 y: midDiagY + (hDist / dLen) * dx
             };
 
-            // إعداد لوحة الرسم (Canvas)
+            currentSketchDXF = [];
+            // حفظ الحدود الخارجية للـ DXF
+            currentSketchDXF.push({ layer: 'BOUNDARY', x1: pNW.x, y1: pNW.y, x2: pNE.x, y2: pNE.y });
+            currentSketchDXF.push({ layer: 'BOUNDARY', x1: pNE.x, y1: pNE.y, x2: pSE.x, y2: pSE.y });
+            currentSketchDXF.push({ layer: 'BOUNDARY', x1: pSE.x, y1: pSE.y, x2: pSW.x, y2: pSW.y });
+            currentSketchDXF.push({ layer: 'BOUNDARY', x1: pSW.x, y1: pSW.y, x2: pNW.x, y2: pNW.y });
+
+            // إعداد الكانفاس
             const canvas = document.getElementById('sketchCanvas');
             const ctx = canvas.getContext('2d');
             const isDark = document.getElementById('sketch-theme').value === 'cad';
-            const offsetPx = parseFloat(document.getElementById('dim-offset').value) || 36;
+            const offsetPx = parseFloat(document.getElementById('dim-offset').value) || 44;
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // خلفية اللوحة
             ctx.fillStyle = isDark ? '#0b1120' : '#ffffff';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // رسم شبكة خلفية خفيفة
-            ctx.strokeStyle = isDark ? 'rgba(56, 189, 248, 0.08)' : 'rgba(148, 163, 184, 0.2)';
+            // شبكة خلفية
+            ctx.strokeStyle = isDark ? 'rgba(56, 189, 248, 0.08)' : 'rgba(148, 163, 184, 0.18)';
             ctx.lineWidth = 1;
             for (let gx = 20; gx < canvas.width - 20; gx += 30) {
                 ctx.beginPath(); ctx.moveTo(gx, 20); ctx.lineTo(gx, canvas.height - 110); ctx.stroke();
@@ -1014,22 +1187,22 @@
                 ctx.beginPath(); ctx.moveTo(20, gy); ctx.lineTo(canvas.width - 20, gy); ctx.stroke();
             }
 
-            // الإطار الهندسي الخارجي للوحة
+            // إطار اللوحة
             ctx.strokeStyle = isDark ? '#38bdf8' : '#0f172a';
             ctx.lineWidth = 3;
             ctx.strokeRect(12, 12, canvas.width - 24, canvas.height - 24);
             ctx.lineWidth = 1;
             ctx.strokeRect(17, 17, canvas.width - 34, canvas.height - 34);
 
-            // تحويل إحداثيات الشكل لتتوسط منطقة الرسم بمقياس مناسب
+            // مقياس الرسم
             const pts = [pSW, pSE, pNE, pNW];
             const minX = Math.min(...pts.map(p => p.x));
             const maxX = Math.max(...pts.map(p => p.x));
             const minY = Math.min(...pts.map(p => p.y));
             const maxY = Math.max(...pts.map(p => p.y));
 
-            const drawW = canvas.width - 260;
-            const drawH = canvas.height - 260;
+            const drawW = canvas.width - 280;
+            const drawH = canvas.height - 270;
             const scale = Math.min(drawW / (maxX - minX || 1), drawH / (maxY - minY || 1));
 
             const centerX = canvas.width / 2;
@@ -1037,7 +1210,6 @@
             const polyCenterX = (minX + maxX) / 2;
             const polyCenterY = (minY + maxY) / 2;
 
-            // دالة تحويل النقطة إلى شاشة الكانفاس (مع قلب محور Y لأن الشاشة تبدأ من أعلى)
             const toCanvas = pt => ({
                 x: centerX + (pt.x - polyCenterX) * scale,
                 y: centerY - (pt.y - polyCenterY) * scale
@@ -1048,49 +1220,225 @@
             const cNE = toCanvas(pNE);
             const cNW = toCanvas(pNW);
 
-            // رسم المضلع (قطعة الأرض)
-            ctx.save();
+            // التحقق من وضع الفرز والتجنيب
+            const shares = parseSubdivisionShares();
+            const subdivDir = document.getElementById('subdiv-dir').value;
+            const showDiagPref = document.getElementById('show-diag').value;
+
+            const plotColorsLight = [
+                'rgba(59, 130, 246, 0.14)',
+                'rgba(16, 185, 129, 0.14)',
+                'rgba(245, 158, 11, 0.14)',
+                'rgba(168, 85, 247, 0.14)',
+                'rgba(236, 72, 153, 0.14)',
+                'rgba(14, 165, 233, 0.14)'
+            ];
+            const plotColorsDark = [
+                'rgba(56, 189, 248, 0.18)',
+                'rgba(52, 211, 153, 0.18)',
+                'rgba(251, 191, 36, 0.18)',
+                'rgba(192, 132, 252, 0.18)',
+                'rgba(244, 114, 182, 0.18)',
+                'rgba(96, 165, 250, 0.18)'
+            ];
+
+            const tbodySubdiv = document.getElementById('subdiv-tbody');
+            tbodySubdiv.innerHTML = '';
+
+            if (shares.length >= 2) {
+                // حساب الفرز والتجنيب ورسم القطع المفرزة
+                const totalWeight = shares.reduce((acc, s) => acc + s.weight, 0);
+                let cumWeight = 0;
+                let prevT = 0;
+
+                shares.forEach((share, idx) => {
+                    cumWeight += share.weight;
+                    const targetRatio = cumWeight / totalWeight;
+                    const nextT = (idx === shares.length - 1)
+                        ? 1
+                        : findExactPartitionParam(pNW, pNE, pSE, pSW, targetRatio, subdivDir);
+
+                    let subNW, subNE, subSE, subSW;
+                    let front1Len = 0, front2Len = 0, divLineLen = 0;
+
+                    if (subdivDir === 'vertical') {
+                        subNW = lerpPt(pNW, pNE, prevT);
+                        subNE = lerpPt(pNW, pNE, nextT);
+                        subSE = lerpPt(pSW, pSE, nextT);
+                        subSW = lerpPt(pSW, pSE, prevT);
+
+                        front1Len = distPt(subNW, subNE); // واجهة بحرية
+                        front2Len = distPt(subSW, subSE); // واجهة قبلية
+                        divLineLen = distPt(subNE, subSE); // طول حد الفصل
+                    } else {
+                        subNW = lerpPt(pNW, pSW, prevT);
+                        subNE = lerpPt(pNE, pSE, prevT);
+                        subSE = lerpPt(pNE, pSE, nextT);
+                        subSW = lerpPt(pNW, pSW, nextT);
+
+                        front1Len = distPt(subNE, subSE); // واجهة شرقية
+                        front2Len = distPt(subNW, subSW); // واجهة غربية
+                        divLineLen = distPt(subSW, subSE); // طول حد الفصل
+                    }
+
+                    const plotArea = totalArea * (share.weight / totalWeight);
+                    const pfqs = formatFQS(plotArea);
+
+                    // تحويل أركان القطعة للكانفاس
+                    const csNW = toCanvas(subNW);
+                    const csNE = toCanvas(subNE);
+                    const csSE = toCanvas(subSE);
+                    const csSW = toCanvas(subSW);
+
+                    // تلوين القطعة
+                    ctx.beginPath();
+                    ctx.moveTo(csNW.x, csNW.y);
+                    ctx.lineTo(csNE.x, csNE.y);
+                    ctx.lineTo(csSE.x, csSE.y);
+                    ctx.lineTo(csSW.x, csSW.y);
+                    ctx.closePath();
+                    ctx.fillStyle = isDark ? plotColorsDark[idx % plotColorsDark.length] : plotColorsLight[idx % plotColorsLight.length];
+                    ctx.fill();
+
+                    // كتابة مقاسات الواجهات الفرعية لكل قطعة على الأضلاع الخارجية
+                    const subBg = isDark ? 'rgba(15,23,42,0.85)' : 'rgba(255,255,255,0.85)';
+                    const subCol = isDark ? '#38bdf8' : '#0f766e';
+                    if (subdivDir === 'vertical') {
+                        drawTextAlongSegment(ctx, csNW, csNE, `${front1Len.toFixed(2)}م`, -13, subCol, subBg, 'bold 11px Cairo');
+                        drawTextAlongSegment(ctx, csSE, csSW, `${front2Len.toFixed(2)}م`, -13, subCol, subBg, 'bold 11px Cairo');
+                    } else {
+                        drawTextAlongSegment(ctx, csNE, csSE, `${front1Len.toFixed(2)}م`, -14, subCol, subBg, 'bold 11px Cairo');
+                        drawTextAlongSegment(ctx, csSW, csNW, `${front2Len.toFixed(2)}م`, -14, subCol, subBg, 'bold 11px Cairo');
+                    }
+
+                    // رسم خط الفصل (حد الفرز) بين القطع
+                    if (idx < shares.length - 1) {
+                        const divP1 = (subdivDir === 'vertical') ? csNE : csSW;
+                        const divP2 = csSE;
+
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.setLineDash([8, 4]);
+                        ctx.strokeStyle = isDark ? '#facc15' : '#059669';
+                        ctx.lineWidth = 2.2;
+                        ctx.moveTo(divP1.x, divP1.y);
+                        ctx.lineTo(divP2.x, divP2.y);
+                        ctx.stroke();
+                        ctx.restore();
+
+                        // كتابة طول خط الفصل عليه
+                        drawTextAlongSegment(
+                            ctx, divP1, divP2,
+                            `حد فرز: ${divLineLen.toFixed(2)} م`,
+                            0,
+                            isDark ? '#facc15' : '#065f46',
+                            isDark ? '#0f172a' : '#ecfdf5',
+                            'bold 11px Cairo'
+                        );
+
+                        // حفظ خط الفرز في DXF
+                        const mP1 = (subdivDir === 'vertical') ? subNE : subSW;
+                        const mP2 = subSE;
+                        currentSketchDXF.push({ layer: 'SUBDIVISION_LINES', x1: mP1.x, y1: mP1.y, x2: mP2.x, y2: mP2.y });
+                    }
+
+                    // كتابة بيانات القطعة في مركزها (الاسم + المساحة بالمتر + القيراط والسهم)
+                    const cx = (csNW.x + csNE.x + csSE.x + csSW.x) / 4;
+                    const cy = (csNW.y + csNE.y + csSE.y + csSW.y) / 4;
+
+                    ctx.save();
+                    ctx.fillStyle = isDark ? '#ffffff' : '#0f172a';
+                    ctx.font = 'bold 12.5px Cairo';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(share.name, cx, cy - 14);
+
+                    ctx.fillStyle = isDark ? '#38bdf8' : '#1d4ed8';
+                    ctx.font = 'bold 12px Cairo';
+                    ctx.fillText(`${plotArea.toFixed(1)} م²`, cx, cy + 2);
+
+                    ctx.fillStyle = isDark ? '#facc15' : '#b45309';
+                    ctx.font = '600 11px Cairo';
+                    const fqsText = pfqs.fed > 0
+                        ? `${pfqs.fed}ف ${pfqs.qir}ط ${pfqs.sah}س`
+                        : `${pfqs.qir}ط و ${pfqs.sah}س`;
+                    ctx.fillText(fqsText, cx, cy + 17);
+                    ctx.restore();
+
+                    // حفظ النص في DXF
+                    const mcx = (subNW.x + subNE.x + subSE.x + subSW.x) / 4;
+                    const mcy = (subNW.y + subNE.y + subSE.y + subSW.y) / 4;
+                    currentSketchDXF.push({
+                        layer: 'TEXT', isText: true, x: mcx, y: mcy,
+                        text: `${share.name} (${plotArea.toFixed(1)} m2)`
+                    });
+
+                    // إضافة الصف في جدول الفرز الجانبي
+                    tbodySubdiv.innerHTML += `
+                        <tr>
+                            <td><b>${share.name}</b></td>
+                            <td>${plotArea.toFixed(2)}</td>
+                            <td>${fqsText}</td>
+                            <td>${front1Len.toFixed(2)} × ${front2Len.toFixed(2)}</td>
+                        </tr>
+                    `;
+
+                    prevT = nextT;
+                });
+            } else {
+                // رسم الأرض كقطعة واحدة بدون تقسيم
+                ctx.beginPath();
+                ctx.moveTo(cNW.x, cNW.y);
+                ctx.lineTo(cNE.x, cNE.y);
+                ctx.lineTo(cSE.x, cSE.y);
+                ctx.lineTo(cSW.x, cSW.y);
+                ctx.closePath();
+                ctx.fillStyle = isDark ? 'rgba(14, 165, 233, 0.15)' : 'rgba(37, 99, 235, 0.08)';
+                ctx.fill();
+            }
+
+            // رسم الإطار الخارجي لقطعة الأرض
             ctx.beginPath();
             ctx.moveTo(cNW.x, cNW.y);
             ctx.lineTo(cNE.x, cNE.y);
             ctx.lineTo(cSE.x, cSE.y);
             ctx.lineTo(cSW.x, cSW.y);
             ctx.closePath();
-
-            ctx.fillStyle = isDark ? 'rgba(14, 165, 233, 0.15)' : 'rgba(37, 99, 235, 0.08)';
-            ctx.fill();
             ctx.lineWidth = 3;
             ctx.strokeStyle = isDark ? '#ffffff' : '#0f172a';
             ctx.stroke();
 
-            // رسم خط الوتر (القطر)
-            ctx.beginPath();
-            ctx.setLineDash([7, 5]);
-            ctx.strokeStyle = isDark ? '#f43f5e' : '#dc2626';
-            ctx.lineWidth = 1.8;
-            ctx.moveTo(cNW.x, cNW.y);
-            ctx.lineTo(cSE.x, cSE.y);
-            ctx.stroke();
-            ctx.setLineDash([]);
+            // رسم خط الوتر إذا كان مفعلاً أو في حالة عدم التقسيم
+            if (shares.length < 2 || showDiagPref === 'show') {
+                ctx.save();
+                ctx.beginPath();
+                ctx.setLineDash([7, 5]);
+                ctx.strokeStyle = isDark ? '#f43f5e' : '#dc2626';
+                ctx.lineWidth = 1.6;
+                ctx.moveTo(cNW.x, cNW.y);
+                ctx.lineTo(cSE.x, cSE.y);
+                ctx.stroke();
+                ctx.setLineDash([]);
 
-            // كتابة طول الوتر في منتصفه
-            const midDiagCanvas = { x: (cNW.x + cSE.x) / 2, y: (cNW.y + cSE.y) / 2 };
-            ctx.fillStyle = isDark ? '#0f172a' : '#fff';
-            ctx.fillRect(midDiagCanvas.x - 48, midDiagCanvas.y - 11, 96, 22);
-            ctx.fillStyle = isDark ? '#fb7185' : '#dc2626';
-            ctx.font = 'bold 12px Cairo';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(`الوتر = ${D.toFixed(2)} م`, midDiagCanvas.x, midDiagCanvas.y);
+                const midDiagCanvas = { x: (cNW.x + cSE.x) / 2, y: (cNW.y + cSE.y) / 2 };
+                ctx.fillStyle = isDark ? '#0f172a' : '#fff';
+                ctx.fillRect(midDiagCanvas.x - 48, midDiagCanvas.y - 11, 96, 22);
+                ctx.fillStyle = isDark ? '#fb7185' : '#dc2626';
+                ctx.font = 'bold 11.5px Cairo';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(`الوتر = ${D.toFixed(2)} م`, midDiagCanvas.x, midDiagCanvas.y);
 
-            // كتابة مساحة المثلثين داخل الرسمة
-            const tri1Center = { x: (cSW.x + cSE.x + cNW.x) / 3, y: (cSW.y + cSE.y + cNW.y) / 3 };
-            const tri2Center = { x: (cNE.x + cSE.x + cNW.x) / 3, y: (cNE.y + cSE.y + cNW.y) / 3 };
-            ctx.fillStyle = isDark ? '#94a3b8' : '#475569';
-            ctx.font = '600 12px Cairo';
-            ctx.fillText(`م1 (${area1.toFixed(1)} م²)`, tri1Center.x, tri1Center.y);
-            ctx.fillText(`م2 (${area2.toFixed(1)} م²)`, tri2Center.x, tri2Center.y);
-            ctx.restore();
+                if (shares.length < 2) {
+                    const tri1Center = { x: (cSW.x + cSE.x + cNW.x) / 3, y: (cSW.y + cSE.y + cNW.y) / 3 };
+                    const tri2Center = { x: (cNE.x + cSE.x + cNW.x) / 3, y: (cNE.y + cSE.y + cNW.y) / 3 };
+                    ctx.fillStyle = isDark ? '#94a3b8' : '#475569';
+                    ctx.font = '600 12px Cairo';
+                    ctx.fillText(`م1 (${area1.toFixed(1)} م²)`, tri1Center.x, tri1Center.y);
+                    ctx.fillText(`م2 (${area2.toFixed(1)} م²)`, tri2Center.x, tri2Center.y);
+                }
+                ctx.restore();
+            }
 
             // قراءة بيانات الجيران
             const neighN = document.getElementById('neigh-n').value;
@@ -1098,15 +1446,14 @@
             const neighE = document.getElementById('neigh-e').value;
             const neighW = document.getElementById('neigh-w').value;
 
-            // رسم خطوط الأبعاد بالأوفست (Offset Dimensions) والجيران على الأضلاع الأربعة
-            // ترتيب النقاط بانتظام عكس عقارب الساعة ليكون الأوفست للخارج دائماً
-            drawOffsetDimension(ctx, cNW, cNE, offsetPx, `${N.toFixed(2)} م`, `شمالاً: ${neighN}`, isDark);
-            drawOffsetDimension(ctx, cNE, cSE, offsetPx, `${E.toFixed(2)} م`, `شرقاً: ${neighE}`, isDark);
-            drawOffsetDimension(ctx, cSE, cSW, offsetPx, `${S.toFixed(2)} م`, `جنوباً: ${neighS}`, isDark);
-            drawOffsetDimension(ctx, cSW, cNW, offsetPx, `${W.toFixed(2)} م`, `غرباً: ${neighW}`, isDark);
+            // رسم خطوط الأبعاد الكلية الخارجية بالأوفست (Offset Dimensions)
+            drawOffsetDimension(ctx, cNW, cNE, offsetPx, `إجمالي البحري ${N.toFixed(2)} م`, `شمالاً: ${neighN}`, isDark);
+            drawOffsetDimension(ctx, cNE, cSE, offsetPx, `إجمالي الشرقي ${E.toFixed(2)} م`, `شرقاً: ${neighE}`, isDark);
+            drawOffsetDimension(ctx, cSE, cSW, offsetPx, `إجمالي القبلي ${S.toFixed(2)} م`, `جنوباً: ${neighS}`, isDark);
+            drawOffsetDimension(ctx, cSW, cNW, offsetPx, `إجمالي الغربي ${W.toFixed(2)} م`, `غرباً: ${neighW}`, isDark);
 
             // رسم دوائر الأركان
-            [cNW, cNE, cSE, cSW].forEach((pt, idx) => {
+            [cNW, cNE, cSE, cSW].forEach(pt => {
                 ctx.beginPath();
                 ctx.arc(pt.x, pt.y, 4.5, 0, Math.PI * 2);
                 ctx.fillStyle = '#f59e0b';
@@ -1116,11 +1463,9 @@
                 ctx.stroke();
             });
 
-            // رسم سهم الشمال (North Arrow)
+            // رسم سهم الشمال والخرطوشة
             drawNorthArrow(ctx, canvas.width - 65, 65, isDark);
-
-            // رسم خرطوشة اللوحة الهندسية (Title Block) في الأسفل
-            drawTitleBlock(ctx, canvas.width, canvas.height, totalArea, perimeter, fqs, isDark);
+            drawTitleBlock(ctx, canvas.width, canvas.height, totalArea, perimeter, fqs, shares.length, isDark);
         }
 
         function drawNorthArrow(ctx, x, y, isDark) {
@@ -1148,11 +1493,11 @@
             ctx.restore();
         }
 
-        function drawTitleBlock(ctx, w, h, area, perim, fqs, isDark) {
+        function drawTitleBlock(ctx, w, h, area, perim, fqs, plotsCount, isDark) {
             const boxY = h - 92;
             const boxH = 75;
             const engName = document.getElementById('eng-name').value || 'م. أحمد سمير';
-            const ownerName = document.getElementById('owner-name').value || 'رفع مساحي';
+            const ownerName = document.getElementById('owner-name').value || 'كروكي فرز وتجنيب';
             const dateStr = new Date().toLocaleDateString('ar-EG');
 
             ctx.save();
@@ -1162,64 +1507,98 @@
             ctx.fillRect(17, boxY, w - 34, boxH);
             ctx.strokeRect(17, boxY, w - 34, boxH);
 
-            // تقسيم الخرطوشة إلى 3 أعمدة
             ctx.beginPath();
-            ctx.moveTo(310, boxY); ctx.lineTo(310, boxY + boxH);
-            ctx.moveTo(610, boxY); ctx.lineTo(610, boxY + boxH);
+            ctx.moveTo(320, boxY); ctx.lineTo(320, boxY + boxH);
+            ctx.moveTo(630, boxY); ctx.lineTo(630, boxY + boxH);
             ctx.stroke();
 
             ctx.fillStyle = isDark ? '#ffffff' : '#0f172a';
             ctx.textAlign = 'right';
 
-            // القسم الأيمن: بيانات المشروع والمهندس
-            ctx.font = 'bold 14px Cairo';
-            ctx.fillText(`المشروع: ${ownerName}`, w - 30, boxY + 26);
+            // القسم الأيمن
+            ctx.font = 'bold 13.5px Cairo';
+            ctx.fillText(`المشروع: ${ownerName}`, w - 28, boxY + 26);
             ctx.font = '600 13px Cairo';
             ctx.fillStyle = isDark ? '#38bdf8' : '#2563eb';
-            ctx.fillText(`إعداد المهندس: ${engName}`, w - 30, boxY + 52);
+            ctx.fillText(`إعداد المهندس: ${engName}`, w - 28, boxY + 52);
 
-            // القسم الأوسط: المساحة بالمتر والمحيط
+            // القسم الأوسط
             ctx.fillStyle = isDark ? '#ffffff' : '#0f172a';
-            ctx.font = 'bold 14px Cairo';
-            ctx.fillText(`المساحة الكلية: ${area.toFixed(2)} متر مربع`, 595, boxY + 26);
+            ctx.font = 'bold 13.5px Cairo';
+            ctx.fillText(`المساحة الكلية: ${area.toFixed(2)} م² (محيط: ${perim.toFixed(1)} م)`, 615, boxY + 26);
             ctx.font = '600 13px Cairo';
-            ctx.fillText(`المحيط الكلي: ${perim.toFixed(2)} متر طولي`, 595, boxY + 52);
+            ctx.fillStyle = isDark ? '#34d399' : '#059669';
+            const subdivStatus = plotsCount >= 2 ? `تم فرز الأرض إلى عدد (${plotsCount}) قطع/حصص` : 'قطعة واحدة بدون فرز';
+            ctx.fillText(`حالة الفرز: ${subdivStatus}`, 615, boxY + 52);
 
-            // القسم الأيسر: الفدان والقيراط والسهم والتاريخ
+            // القسم الأيسر
             ctx.fillStyle = isDark ? '#facc15' : '#b45309';
-            ctx.font = 'bold 14px Cairo';
-            ctx.fillText(`التفقيط: ${fqs.fed} فدان ، ${fqs.qir} قيراط ، ${fqs.sah} سهم`, 295, boxY + 26);
+            ctx.font = 'bold 13.5px Cairo';
+            ctx.fillText(`التفقيط: ${fqs.fed} فدان ، ${fqs.qir} قيراط ، ${fqs.sah} سهم`, 305, boxY + 26);
             ctx.fillStyle = isDark ? '#94a3b8' : '#475569';
             ctx.font = '600 12px Cairo';
-            ctx.fillText(`تاريخ الإصدار: ${dateStr}`, 295, boxY + 52);
+            ctx.fillText(`تاريخ الإصدار: ${dateStr}`, 305, boxY + 52);
 
             ctx.restore();
         }
 
-        // نقل الأبعاد من حاسبة الكروكي إلى مصمم الأوتوكاد
+        // تصدير الكروكي وخطوط الفرز والتجنيب إلى ملف AutoCAD (.DXF)
+        function exportSketchDXF() {
+            if (!currentSketchDXF.length) calculateAndDrawSketch();
+            let dxf = "0\nSECTION\n2\nENTITIES\n";
+
+            currentSketchDXF.forEach(item => {
+                if (item.isText) {
+                    dxf += `0\nTEXT\n8\n${item.layer}\n10\n${item.x.toFixed(3)}\n20\n${item.y.toFixed(3)}\n30\n0.0\n40\n0.6\n1\n${item.text}\n`;
+                } else {
+                    dxf += `0\nLINE\n8\n${item.layer}\n10\n${item.x1.toFixed(3)}\n20\n${item.y1.toFixed(3)}\n30\n0.0\n11\n${item.x2.toFixed(3)}\n21\n${item.y2.toFixed(3)}\n31\n0.0\n`;
+                }
+            });
+
+            dxf += "0\nENDSEC\n0\nEOF\n";
+            const blob = new Blob([dxf], { type: 'application/dxf' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = "Subdivision_Sketch_AutoCAD.dxf";
+            link.click();
+        }
+
+        // نقل أبعاد القطعة أو الأرض لتبويب الأوتوكاد المعماري
         function sendDimensionsToCAD() {
-            const N = parseFloat(document.getElementById('side-n').value) || 20;
-            const S = parseFloat(document.getElementById('side-s').value) || 20;
-            const E = parseFloat(document.getElementById('side-e').value) || 40;
-            const W = parseFloat(document.getElementById('side-w').value) || 40;
+            const N = parseFloat(document.getElementById('side-n').value) || 40;
+            const S = parseFloat(document.getElementById('side-s').value) || 40;
+            const E = parseFloat(document.getElementById('side-e').value) || 20;
+            const W = parseFloat(document.getElementById('side-w').value) || 20;
 
-            const avgW = (N + S) / 2;
-            const avgD = (E + W) / 2;
+            const shares = parseSubdivisionShares();
+            const dir = document.getElementById('subdiv-dir').value;
 
-            // نجعل الضلع الأصغر هو الواجهة والضلع الأكبر هو العمق تلقائياً أو كما هو
-            document.getElementById('cad-width').value = Math.min(avgW, avgD).toFixed(2);
-            document.getElementById('cad-depth').value = Math.max(avgW, avgD).toFixed(2);
+            let targetW = (N + S) / 2;
+            let targetD = (E + W) / 2;
+
+            // إذا كان هناك تقسيم مفعل، ننقل أبعاد القطعة الواحدة لتصميمها كمنزل!
+            if (shares.length >= 2) {
+                const firstRatio = shares[0].weight / shares.reduce((a, b) => a + b.weight, 0);
+                if (dir === 'vertical') {
+                    targetW = targetW * firstRatio;
+                } else {
+                    targetD = targetD * firstRatio;
+                }
+            }
+
+            document.getElementById('cad-width').value = Math.min(targetW, targetD).toFixed(2);
+            document.getElementById('cad-depth').value = Math.max(targetW, targetD).toFixed(2);
 
             const cadTabBtn = document.querySelectorAll('.tab-btn')[2];
             switchTab('cad-tab', cadTabBtn, 'cad-pane');
         }
 
         // ================= 3. مصمم الأوتوكاد المعماري الذكي (AI AutoCAD House Generator) =================
-        let currentCADEntities = []; // لحفظ خطوط ونصوص الرسم لتصديرها كملف DXF حقيقي
+        let currentCADEntities = [];
 
         function generateAICADPlan() {
-            const W = parseFloat(document.getElementById('cad-width').value) || 20;
-            const D = parseFloat(document.getElementById('cad-depth').value) || 40;
+            const W = parseFloat(document.getElementById('cad-width').value) || 10;
+            const D = parseFloat(document.getElementById('cad-depth').value) || 20;
             const style = document.getElementById('cad-style').value;
             const numRooms = parseInt(document.getElementById('cad-rooms').value) || 3;
             const yardRatio = parseFloat(document.getElementById('cad-courtyard').value) || 0;
@@ -1227,7 +1606,6 @@
             currentCADEntities = [];
             const rooms = [];
 
-            // حساب عمق الحوش الأمامي والجزء المبني
             const yardDepth = +(D * yardRatio).toFixed(2);
             const buildDepth = +(D - yardDepth).toFixed(2);
             const buildStartY = yardDepth;
@@ -1240,7 +1618,6 @@
             }
 
             if (style === 'rural') {
-                // تصميم منزل مصري ريفي / بدائي (مضيفة + صالة وسطى + غرف + مطبخ وحمام + سلم)
                 const frontZoneH = +(buildDepth * 0.35).toFixed(2);
                 const backZoneH = +(buildDepth - frontZoneH).toFixed(2);
 
@@ -1248,34 +1625,26 @@
                 const stairW = +(W * 0.20).toFixed(2);
                 const hallFrontW = +(W - madiafaW - stairW).toFixed(2);
 
-                rooms.push({ name: 'مضيفة استقبال الضيوف', x: 0, y: buildStartY, w: madiafaW, h: frontZoneH, type: 'reception', door: 'bottom' });
+                rooms.push({ name: 'مضيفة استقبال', x: 0, y: buildStartY, w: madiafaW, h: frontZoneH, type: 'reception', door: 'bottom' });
                 rooms.push({ name: 'المدخل والصالة', x: madiafaW, y: buildStartY, w: hallFrontW, h: frontZoneH, type: 'hall', door: 'bottom' });
                 rooms.push({ name: 'بئر السلم', x: madiafaW + hallFrontW, y: buildStartY, w: stairW, h: frontZoneH, type: 'stairs' });
 
-                // القسم الخلفي: غرف على اليمين، صالة معيشة في الوسط، خدمات ومنور على اليسار
                 const rightColW = +(W * 0.38).toFixed(2);
                 const leftColW = +(W * 0.32).toFixed(2);
                 const midHallW = +(W - rightColW - leftColW).toFixed(2);
                 const backStartY = buildStartY + frontZoneH;
 
-                // صالة توزيع ومعيشة وسطى
                 rooms.push({ name: 'صالة معيشة وتوزيع', x: rightColW, y: backStartY, w: midHallW, h: backZoneH, type: 'hall' });
 
-                // تقسيم الغرف في الجناح الأيمن
                 const roomH = +(backZoneH / Math.max(1, numRooms - 1)).toFixed(2);
                 for (let i = 0; i < numRooms - 1; i++) {
                     rooms.push({
                         name: `غرفة نوم (${i + 1})`,
-                        x: 0,
-                        y: +(backStartY + i * roomH).toFixed(2),
-                        w: rightColW,
-                        h: roomH,
-                        type: 'bedroom',
-                        door: 'left'
+                        x: 0, y: +(backStartY + i * roomH).toFixed(2),
+                        w: rightColW, h: roomH, type: 'bedroom', door: 'left'
                     });
                 }
 
-                // الجناح الأيسر: غرفة إضافية + مطبخ + حمام + منور
                 const serviceX = rightColW + midHallW;
                 const extraRoomH = +(backZoneH * 0.40).toFixed(2);
                 const serviceH = +(backZoneH - extraRoomH).toFixed(2);
@@ -1292,7 +1661,6 @@
                 rooms.push({ name: 'منور', x: serviceX + servRoomW, y: backStartY + extraRoomH, w: shaftW, h: serviceH, type: 'shaft' });
 
             } else if (style === 'apartment') {
-                // تقسيم شقة سكنية قياسية
                 const frontH = +(buildDepth * 0.38).toFixed(2);
                 const backH = +(buildDepth - frontH).toFixed(2);
 
@@ -1316,16 +1684,11 @@
                 for (let i = 0; i < remRooms; i++) {
                     rooms.push({
                         name: `غرفة نوم (${i + 2})`,
-                        x: 0,
-                        y: +(backY + i * rH).toFixed(2),
-                        w: rightWingW,
-                        h: rH,
-                        type: 'bedroom',
-                        door: 'left'
+                        x: 0, y: +(backY + i * rH).toFixed(2),
+                        w: rightWingW, h: rH, type: 'bedroom', door: 'left'
                     });
                 }
 
-                // خدمات ومنور بالجناح الأيسر
                 const sx = rightWingW + corridorW;
                 const shaftW = +(leftWingW * 0.30).toFixed(2);
                 const kbW = +(leftWingW - shaftW).toFixed(2);
@@ -1337,7 +1700,6 @@
                 rooms.push({ name: 'منور خدمة', x: sx + kbW, y: backY, w: shaftW, h: backH, type: 'shaft' });
 
             } else {
-                // واجهة تجارية (محلات + سكن خلفي)
                 const shopH = +(buildDepth * 0.28).toFixed(2);
                 const resH = +(buildDepth - shopH).toFixed(2);
                 const entryW = +(W * 0.20).toFixed(2);
@@ -1372,11 +1734,9 @@
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // خلفية الأوتوكاد الداكنة الأصلية
             ctx.fillStyle = '#090d16';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // شبكة الأوتوكاد
             ctx.strokeStyle = 'rgba(30, 58, 138, 0.25)';
             ctx.lineWidth = 1;
             for (let x = 0; x < canvas.width; x += 25) {
@@ -1386,7 +1746,6 @@
                 ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
             }
 
-            // حساب مقياس الرسم
             const pad = 110;
             const availW = canvas.width - pad * 2;
             const availH = canvas.height - pad * 2 - 40;
@@ -1395,11 +1754,9 @@
             const startX = (canvas.width - W * scale) / 2;
             const startY = 65;
 
-            // دالة تحويل إحداثيات المتر إلى بيكسل على الكانفاس (نضع الواجهة في الأسفل)
             const toX = xm => startX + xm * scale;
             const toY = ym => startY + (D - ym) * scale;
 
-            // رسم كل غرفة وحوائطها المزدوجة
             rooms.forEach(r => {
                 const x1 = toX(r.x);
                 const y2 = toY(r.y);
@@ -1408,25 +1765,17 @@
                 const rw = x2 - x1;
                 const rh = y2 - y1;
 
-                // حفظ المستطيل لملف DXF
                 currentCADEntities.push({
                     type: 'RECT', x1: r.x, y1: r.y, x2: r.x + r.w, y2: r.y + r.h,
                     label: r.name, dim: `${r.w.toFixed(2)}x${r.h.toFixed(2)}m`
                 });
 
-                // تلوين خفيف حسب نوع الفراغ
-                if (r.type === 'yard') {
-                    ctx.fillStyle = 'rgba(16, 185, 129, 0.08)';
-                } else if (r.type === 'shaft') {
-                    ctx.fillStyle = 'rgba(244, 63, 94, 0.12)';
-                } else if (r.type === 'stairs') {
-                    ctx.fillStyle = 'rgba(245, 158, 11, 0.12)';
-                } else {
-                    ctx.fillStyle = 'rgba(56, 189, 248, 0.05)';
-                }
+                if (r.type === 'yard') ctx.fillStyle = 'rgba(16, 185, 129, 0.08)';
+                else if (r.type === 'shaft') ctx.fillStyle = 'rgba(244, 63, 94, 0.12)';
+                else if (r.type === 'stairs') ctx.fillStyle = 'rgba(245, 158, 11, 0.12)';
+                else ctx.fillStyle = 'rgba(56, 189, 248, 0.05)';
                 ctx.fillRect(x1, y1, rw, rh);
 
-                // رسم الحائط المزدوج مثل الأوتوكاد (Wall Thickness)
                 ctx.strokeStyle = r.type === 'yard' ? '#10b981' : '#38bdf8';
                 ctx.lineWidth = 2.5;
                 ctx.strokeRect(x1, y1, rw, rh);
@@ -1437,7 +1786,6 @@
                     ctx.strokeRect(x1 + 3, y1 + 3, rw - 6, rh - 6);
                 }
 
-                // إذا كان منور: رسم علامة X الهندسية
                 if (r.type === 'shaft') {
                     ctx.beginPath();
                     ctx.strokeStyle = '#f43f5e';
@@ -1447,7 +1795,6 @@
                     ctx.stroke();
                 }
 
-                // إذا كان سلم: رسم درجات السلم
                 if (r.type === 'stairs') {
                     ctx.strokeStyle = '#f59e0b';
                     ctx.lineWidth = 1.2;
@@ -1461,7 +1808,6 @@
                     }
                 }
 
-                // رسم رمز الباب القوسي (CAD Door Swing)
                 if (r.door) {
                     ctx.save();
                     ctx.strokeStyle = '#f472b6';
@@ -1469,29 +1815,22 @@
                     const doorR = Math.min(22, rw * 0.25, rh * 0.25);
                     ctx.beginPath();
                     if (r.door === 'bottom') {
-                        const dx = x1 + rw * 0.5;
-                        const dy = y2;
-                        ctx.moveTo(dx, dy);
-                        ctx.lineTo(dx, dy - doorR);
+                        const dx = x1 + rw * 0.5, dy = y2;
+                        ctx.moveTo(dx, dy); ctx.lineTo(dx, dy - doorR);
                         ctx.arc(dx, dy, doorR, -Math.PI / 2, 0);
                     } else if (r.door === 'left') {
-                        const dx = x2;
-                        const dy = y1 + rh * 0.5;
-                        ctx.moveTo(dx, dy);
-                        ctx.lineTo(dx - doorR, dy);
+                        const dx = x2, dy = y1 + rh * 0.5;
+                        ctx.moveTo(dx, dy); ctx.lineTo(dx - doorR, dy);
                         ctx.arc(dx, dy, doorR, Math.PI, Math.PI * 1.5);
                     } else if (r.door === 'right') {
-                        const dx = x1;
-                        const dy = y1 + rh * 0.5;
-                        ctx.moveTo(dx, dy);
-                        ctx.lineTo(dx + doorR, dy);
+                        const dx = x1, dy = y1 + rh * 0.5;
+                        ctx.moveTo(dx, dy); ctx.lineTo(dx + doorR, dy);
                         ctx.arc(dx, dy, doorR, 0, Math.PI * 0.5);
                     }
                     ctx.stroke();
                     ctx.restore();
                 }
 
-                // كتابة اسم الغرفة وأبعادها بالداخل
                 ctx.fillStyle = '#ffffff';
                 ctx.font = 'bold 12px Cairo';
                 ctx.textAlign = 'center';
@@ -1503,7 +1842,6 @@
                 ctx.fillText(`${r.w.toFixed(2)} × ${r.h.toFixed(2)} م`, x1 + rw / 2, y1 + rh / 2 + 10);
             });
 
-            // رسم خطوط الأبعاد الخارجية على لوحة الأوتوكاد
             const pTL = { x: toX(0), y: toY(D) };
             const pTR = { x: toX(W), y: toY(D) };
             const pBR = { x: toX(W), y: toY(0) };
@@ -1514,18 +1852,17 @@
             drawOffsetDimension(ctx, pBR, pBL, 32, `${W.toFixed(2)} م`, '⬇ الواجهة الرئيسية (الشارع) ⬇', true);
             drawOffsetDimension(ctx, pBL, pTL, 36, `${D.toFixed(2)} م`, 'الحد الأيسر', true);
 
-            // عنوان المخطط في الأعلى
             ctx.fillStyle = '#38bdf8';
             ctx.font = 'bold 16px Cairo';
             ctx.textAlign = 'center';
-            ctx.fillText(`مسقط أفقي معماري مقترح (AutoCAD AI) - أبعاد الأرض ${W} × ${D} متر`, canvas.width / 2, 28);
+            ctx.fillText(`مسقط أفقي معماري مقترح (AutoCAD AI) - أبعاد القطعة ${W} × ${D} متر`, canvas.width / 2, 28);
         }
 
         function updateCADReport(W, D, yardDepth, rooms) {
             const totalArea = W * D;
             const builtArea = W * (D - yardDepth);
             let html = `
-                <div><b>• إجمالي مساحة الأرض:</b> ${totalArea.toFixed(2)} م²</div>
+                <div><b>• إجمالي مساحة القطعة:</b> ${totalArea.toFixed(2)} م²</div>
                 <div><b>• المساحة المبنية الصافية:</b> ${builtArea.toFixed(2)} م²</div>
                 <hr style="margin:6px 0; border-color:#e2e8f0;">
                 <b>تفاصيل الفراغات المولدة:</b>
@@ -1538,12 +1875,9 @@
             document.getElementById('cad-report').innerHTML = html;
         }
 
-        // تصدير المخطط كملف AutoCAD (.DXF) حقيقي يفتح على برنامج الأوتوكاد
         function exportDXF() {
             if (!currentCADEntities.length) generateAICADPlan();
-
             let dxf = "0\nSECTION\n2\nENTITIES\n";
-
             currentCADEntities.forEach(ent => {
                 if (ent.type === 'RECT') {
                     const lines = [
@@ -1555,16 +1889,12 @@
                     lines.forEach(l => {
                         dxf += `0\nLINE\n8\nWALLS\n10\n${l[0]}\n20\n${l[1]}\n30\n0.0\n11\n${l[2]}\n21\n${l[3]}\n31\n0.0\n`;
                     });
-
-                    // إضافة نص الأبعاد في منتصف الغرفة على طبقة TEXT
                     const cx = ((ent.x1 + ent.x2) / 2).toFixed(2);
                     const cy = ((ent.y1 + ent.y2) / 2).toFixed(2);
                     dxf += `0\nTEXT\n8\nDIMENSIONS\n10\n${cx}\n20\n${cy}\n30\n0.0\n40\n0.45\n1\n${ent.dim}\n`;
                 }
             });
-
             dxf += "0\nENDSEC\n0\nEOF\n";
-
             const blob = new Blob([dxf], { type: 'application/dxf' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
@@ -1572,7 +1902,6 @@
             link.click();
         }
 
-        // تحميل أي لوحة رسم كصورة PNG عالية الدقة
         function downloadCanvas(canvasId, fileName) {
             const canvas = document.getElementById(canvasId);
             const link = document.createElement('a');
@@ -1608,7 +1937,6 @@
             document.getElementById('cogo-dn').innerText = dN.toFixed(3) + ' م';
         }
 
-        // تشغيل الرسم الافتراضي للكروكي والمخطط عند فتح الصفحة
         window.onload = function() {
             calculateAndDrawSketch();
             generateAICADPlan();
