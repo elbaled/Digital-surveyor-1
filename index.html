@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تطبيق المساحة وحساب الأراضي</title>
+    <title>المسّاح الرقمي المتكامل - GIS & Surveying</title>
     
-    <!-- خط القاهرة لمظهر احترافي -->
+    <!-- خط القاهرة -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     
     <!-- مكتبة الخرائط Leaflet -->
@@ -23,27 +23,36 @@
             display: flex;
             flex-direction: column;
             height: 100vh;
-            background-color: #f4f6f9;
+            background-color: #f1f5f9;
             overflow: hidden;
         }
 
         /* الشريط العلوي */
         header {
-            background-color: #1e293b;
+            background-color: #0f172a;
             color: #ffffff;
             padding: 10px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
             z-index: 1000;
         }
 
         header h1 {
-            font-size: 1.2rem;
+            font-size: 1.15rem;
             display: flex;
             align-items: center;
             gap: 8px;
+        }
+
+        .hint-badge {
+            background: #1e293b;
+            color: #38bdf8;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            border: 1px solid #334155;
         }
 
         /* حاوية التطبيق */
@@ -51,7 +60,7 @@
             display: flex;
             flex: 1;
             position: relative;
-            height: calc(100vh - 55px);
+            height: calc(100vh - 52px);
         }
 
         /* الخريطة */
@@ -62,19 +71,58 @@
             cursor: crosshair;
         }
 
-        /* لوحة التحكم والنتائج */
+        /* القائمة الجانبية */
         .sidebar {
-            width: 340px;
+            width: 400px;
             background: #ffffff;
-            padding: 15px;
-            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            box-shadow: -2px 0 12px rgba(0,0,0,0.1);
             display: flex;
             flex-direction: column;
-            gap: 15px;
             z-index: 500;
-            overflow-y: auto;
+            overflow: hidden;
         }
 
+        /* شريط التبويبات (Tabs) */
+        .tabs {
+            display: flex;
+            background: #e2e8f0;
+            border-bottom: 2px solid #cbd5e1;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px 5px;
+            border: none;
+            background: transparent;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #475569;
+            cursor: pointer;
+            transition: 0.2s;
+            border-bottom: 3px solid transparent;
+            border-radius: 0;
+        }
+
+        .tab-btn.active {
+            background: #ffffff;
+            color: #2563eb;
+            border-bottom: 3px solid #2563eb;
+        }
+
+        .tab-content {
+            display: none;
+            flex: 1;
+            padding: 14px;
+            overflow-y: auto;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        /* الكروت */
         .card {
             background: #f8fafc;
             border: 1px solid #e2e8f0;
@@ -83,10 +131,10 @@
         }
 
         .card-title {
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             font-weight: 700;
-            color: #334155;
-            margin-bottom: 8px;
+            color: #1e293b;
+            margin-bottom: 10px;
             border-bottom: 2px solid #3b82f6;
             display: inline-block;
             padding-bottom: 2px;
@@ -95,8 +143,8 @@
         .result-item {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 6px;
-            font-size: 0.95rem;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
         }
 
         .result-value {
@@ -104,6 +152,7 @@
             color: #0f172a;
         }
 
+        /* صناديق الفدان والقيراط والسهم */
         .feddan-box {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -116,18 +165,18 @@
             background: #eff6ff;
             border: 1px solid #bfdbfe;
             border-radius: 6px;
-            padding: 8px 4px;
+            padding: 6px 4px;
         }
 
         .unit-box span {
             display: block;
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             font-weight: 700;
             color: #1d4ed8;
         }
 
         .unit-box small {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: #475569;
         }
 
@@ -139,10 +188,10 @@
         }
 
         button {
-            padding: 9px 12px;
+            padding: 8px 12px;
             border: none;
             border-radius: 6px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 600;
             cursor: pointer;
             transition: 0.2s;
@@ -161,16 +210,17 @@
         .btn-danger { background: #ef4444; color: white; }
         .btn-danger:hover { background: #dc2626; }
 
-        .btn-success { background: #10b981; color: white; grid-column: span 2; }
+        .btn-success { background: #10b981; color: white; width: 100%; }
         .btn-success:hover { background: #059669; }
 
-        /* جدول الإحداثيات */
+        /* الجداول */
         .coords-list {
-            max-height: 180px;
+            max-height: 170px;
             overflow-y: auto;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             border: 1px solid #e2e8f0;
             border-radius: 6px;
+            background: #fff;
         }
 
         table {
@@ -180,7 +230,7 @@
         }
 
         th, td {
-            padding: 6px;
+            padding: 5px 4px;
             border-bottom: 1px solid #e2e8f0;
         }
 
@@ -188,12 +238,72 @@
             background: #f1f5f9;
             position: sticky;
             top: 0;
+            color: #334155;
+        }
+
+        /* حقول الإدخال للحاسبة اليدوية */
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .input-group.full {
+            grid-column: span 2;
+        }
+
+        .input-group label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .input-group input {
+            padding: 7px 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 5px;
+            font-size: 0.85rem;
+            outline: none;
+        }
+
+        .input-group input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+        }
+
+        /* تصميم النقطة القابلة للسحب على الخريطة */
+        .vertex-marker {
+            background: #f59e0b;
+            color: #fff;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            width: 22px !important;
+            height: 22px !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            cursor: grab;
+        }
+
+        .vertex-marker:active {
+            cursor: grabbing;
+            background: #ea580c;
         }
 
         /* تصميم ملصق طول الضلع على الخريطة */
         .segment-label {
             background: rgba(15, 23, 42, 0.85);
-            color: #fff;
+            color: #38bdf8;
             border: 1px solid #38bdf8;
             border-radius: 4px;
             padding: 1px 6px;
@@ -210,12 +320,13 @@
             }
             .sidebar {
                 width: 100%;
-                height: 45%;
-                padding: 10px;
-                gap: 10px;
+                height: 50%;
             }
             #map {
-                height: 55%;
+                height: 50%;
+            }
+            .hint-badge {
+                display: none;
             }
         }
     </style>
@@ -223,72 +334,199 @@
 <body>
 
     <header>
-        <h1>📐 المسّاح الرقمي - حساب المساحات</h1>
-        <small>اضغط على الخريطة لوضع النقاط</small>
+        <h1>📐 المسّاح الرقمي المتكامل</h1>
+        <span class="hint-badge">💡 يمكنك سحب وتحريك النقاط لتعديل الأركان</span>
     </header>
 
     <div class="main-container">
-        <!-- القائمة الجانبية للنتائج والأدوات -->
+        <!-- القائمة الجانبية -->
         <div class="sidebar">
             
-            <!-- أزرار التحكم -->
-            <div class="controls">
-                <button class="btn-primary" onclick="locateUser()">📍 موقعي الحالي (GPS)</button>
-                <button class="btn-warning" onclick="undoLastPoint()">↩️ تراجع عن نقطة</button>
-                <button class="btn-danger" onclick="clearMap()">🗑️ مسح الكل</button>
+            <!-- أزرار التبويبات -->
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('map-tab', this)">🗺️ الخريطة والـ UTM</button>
+                <button class="tab-btn" onclick="switchTab('manual-tab', this)">📏 حاسبة الشريط</button>
+                <button class="tab-btn" onclick="switchTab('cogo-tab', this)">🧭 انحراف COGO</button>
             </div>
 
-            <!-- كارت المساحة والمحيط -->
-            <div class="card">
-                <div class="card-title">نتائج القياس</div>
-                <div class="result-item">
-                    <span>المساحة بالمتر المربع:</span>
-                    <span class="result-value" id="area-m2">0.00 م²</span>
-                </div>
-                <div class="result-item">
-                    <span>المحيط (مجموع الأضلاع):</span>
-                    <span class="result-value" id="perimeter-m">0.00 م</span>
-                </div>
-                <div class="result-item">
-                    <span>عدد النقاط المرفوعة:</span>
-                    <span class="result-value" id="points-count">0</span>
+            <!-- التبويب الأول: الخريطة ونتائج الرفع والإحداثيات المترية -->
+            <div id="map-tab" class="tab-content active">
+                <div class="controls">
+                    <button class="btn-primary" onclick="locateUser()">📍 موقعي الحالي (GPS)</button>
+                    <button class="btn-warning" onclick="undoLastPoint()">↩️ تراجع عن نقطة</button>
+                    <button class="btn-danger" onclick="clearMap()">🗑️ مسح الكل</button>
                 </div>
 
-                <!-- التفقيط بالوحدات المصرية -->
-                <div class="feddan-box">
-                    <div class="unit-box">
-                        <span id="val-feddan">0</span>
-                        <small>فدان</small>
+                <!-- كارت المساحة والمحيط -->
+                <div class="card">
+                    <div class="card-title">نتائج الرفع من الخريطة</div>
+                    <div class="result-item">
+                        <span>المساحة بالمتر المربع:</span>
+                        <span class="result-value" id="area-m2">0.00 م²</span>
                     </div>
-                    <div class="unit-box">
-                        <span id="val-qirat">0</span>
-                        <small>قيراط</small>
+                    <div class="result-item">
+                        <span>المحيط (مجموع الأضلاع):</span>
+                        <span class="result-value" id="perimeter-m">0.00 م</span>
                     </div>
-                    <div class="unit-box">
-                        <span id="val-sahm">0.0</span>
-                        <small>سهم</small>
+                    <div class="result-item">
+                        <span>عدد النقاط:</span>
+                        <span class="result-value" id="points-count">0</span>
                     </div>
+
+                    <div class="feddan-box">
+                        <div class="unit-box">
+                            <span id="val-feddan">0</span>
+                            <small>فدان</small>
+                        </div>
+                        <div class="unit-box">
+                            <span id="val-qirat">0</span>
+                            <small>قيراط</small>
+                        </div>
+                        <div class="unit-box">
+                            <span id="val-sahm">0.0</span>
+                            <small>سهم</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- جدول إحداثيات UTM -->
+                <div class="card" style="flex: 1; display: flex; flex-direction: column;">
+                    <div class="card-title">الإحداثيات المترية (UTM - WGS84)</div>
+                    <div class="coords-list">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>م</th>
+                                    <th>شرقيات (Easting X)</th>
+                                    <th>شماليات (Northing Y)</th>
+                                    <th>النطاق</th>
+                                </tr>
+                            </thead>
+                            <tbody id="coords-table-body">
+                                <tr><td colspan="4" style="color:#94a3b8;">اضغط على الخريطة لإضافة نقاط</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <button class="btn-success" style="margin-top: 10px;" onclick="exportCSV()">📥 تصدير لـ AutoCAD / GIS (CSV)</button>
                 </div>
             </div>
 
-            <!-- قائمة الإحداثيات -->
-            <div class="card" style="flex: 1; display: flex; flex-direction: column;">
-                <div class="card-title">إحداثيات النقاط (WGS84)</div>
-                <div class="coords-list">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>م</th>
-                                <th>دائرة العرض (Lat)</th>
-                                <th>خط الطول (Lng)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="coords-table-body">
-                            <tr><td colspan="3" style="color:#94a3b8;">لم يتم إضافة نقاط بعد</td></tr>
-                        </tbody>
-                    </table>
+            <!-- التبويب الثاني: حاسبة المساحات اليدوية (القياس بالشريط في الطبيعة) -->
+            <div id="manual-tab" class="tab-content">
+                
+                <!-- حساب شكل رباعي (4 أضلاع + وتر) أو مثلث -->
+                <div class="card">
+                    <div class="card-title">حساب أرض بمعلومية الأضلاع (شريط)</div>
+                    <p style="font-size: 0.75rem; color: #64748b; margin-bottom: 8px;">
+                        للشكل الرباعي أدخل الأضلاع الـ 4 والوتر. ولحساب مثلث واحد اترك الضلع 3 و 4 فارغين.
+                    </p>
+                    <div class="input-grid">
+                        <div class="input-group">
+                            <label>الضلع الأول (أ):</label>
+                            <input type="number" id="side-a" placeholder="متر" step="any">
+                        </div>
+                        <div class="input-group">
+                            <label>الضلع الثاني (ب):</label>
+                            <input type="number" id="side-b" placeholder="متر" step="any">
+                        </div>
+                        <div class="input-group full">
+                            <label style="color:#2563eb;">الوتر المشترك (القطر بين أ،ب و ج،د):</label>
+                            <input type="number" id="side-diag" placeholder="طول الوتر بالمتر (أو الضلع الثالث للمثلث)" step="any">
+                        </div>
+                        <div class="input-group">
+                            <label>الضلع الثالث (ج) [اختياري]:</label>
+                            <input type="number" id="side-c" placeholder="متر" step="any">
+                        </div>
+                        <div class="input-group">
+                            <label>الضلع الرابع (د) [اختياري]:</label>
+                            <input type="number" id="side-d" placeholder="متر" step="any">
+                        </div>
+                    </div>
+                    <button class="btn-primary" style="width:100%;" onclick="calculateManualShape()">🧮 احسب المساحة</button>
                 </div>
-                <button class="btn-success" style="margin-top: 10px;" onclick="exportCSV()">📥 تصدير الإحداثيات (CSV)</button>
+
+                <!-- نتيجة الحاسبة اليدوية -->
+                <div class="card">
+                    <div class="card-title">نتيجة الحساب اليدوي</div>
+                    <div class="result-item">
+                        <span>مساحة المثلث الأول:</span>
+                        <span class="result-value" id="tri1-area">0.00 م²</span>
+                    </div>
+                    <div class="result-item">
+                        <span>مساحة المثلث الثاني:</span>
+                        <span class="result-value" id="tri2-area">0.00 م²</span>
+                    </div>
+                    <div class="result-item" style="border-top:1px solid #cbd5e1; padding-top:5px;">
+                        <span>المساحة الإجمالية:</span>
+                        <span class="result-value" id="manual-total-m2" style="color:#2563eb;">0.00 م²</span>
+                    </div>
+
+                    <div class="feddan-box">
+                        <div class="unit-box">
+                            <span id="m-feddan">0</span>
+                            <small>فدان</small>
+                        </div>
+                        <div class="unit-box">
+                            <span id="m-qirat">0</span>
+                            <small>قيراط</small>
+                        </div>
+                        <div class="unit-box">
+                            <span id="m-sahm">0.0</span>
+                            <small>سهم</small>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- التبويب الثالث: حاسبة المسافة والانحراف (COGO) -->
+            <div id="cogo-tab" class="tab-content">
+                <div class="card">
+                    <div class="card-title">حساب المسافة والانحراف بين نقطتين</div>
+                    <div class="input-grid">
+                        <div class="input-group">
+                            <label>شرقيات النقطة 1 (E1):</label>
+                            <input type="number" id="cogo-e1" placeholder="مثال: 285400" step="any">
+                        </div>
+                        <div class="input-group">
+                            <label>شماليات النقطة 1 (N1):</label>
+                            <input type="number" id="cogo-n1" placeholder="مثال: 3110200" step="any">
+                        </div>
+                        <div class="input-group">
+                            <label>شرقيات النقطة 2 (E2):</label>
+                            <input type="number" id="cogo-e2" placeholder="مثال: 285450" step="any">
+                        </div>
+                        <div class="input-group">
+                            <label>شماليات النقطة 2 (N2):</label>
+                            <input type="number" id="cogo-n2" placeholder="مثال: 3110280" step="any">
+                        </div>
+                    </div>
+                    <button class="btn-primary" style="width:100%;" onclick="calculateCOGO()">🧭 حساب المسافة والانحراف</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">النتائج المساحية (COGO)</div>
+                    <div class="result-item">
+                        <span>المسافة الأفقية:</span>
+                        <span class="result-value" id="cogo-dist">0.00 م</span>
+                    </div>
+                    <div class="result-item">
+                        <span>الانحراف الدائري (Azimuth):</span>
+                        <span class="result-value" id="cogo-az-dms" style="direction:ltr;">0° 0' 0"</span>
+                    </div>
+                    <div class="result-item">
+                        <span>الانحراف بالدرجات العشرية:</span>
+                        <span class="result-value" id="cogo-az-dec">0.0000°</span>
+                    </div>
+                    <div class="result-item">
+                        <span>فرق الشرقيات (ΔE):</span>
+                        <span class="result-value" id="cogo-de">0.00 م</span>
+                    </div>
+                    <div class="result-item">
+                        <span>فرق الشماليات (ΔN):</span>
+                        <span class="result-value" id="cogo-dn">0.00 م</span>
+                    </div>
+                </div>
             </div>
 
         </div>
@@ -297,15 +535,15 @@
         <div id="map"></div>
     </div>
 
-    <!-- مكتبات الجافاسكريبت: Leaflet + Turf.js للحسابات المساحية -->
+    <!-- المكتبات البرمجية: Leaflet + Turf.js + Proj4js لتحويل الإحداثيات إلى UTM -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.11.0/proj4.js"></script>
 
     <script>
-        // 1. إعداد الخريطة (التركيز الافتراضي على مصر)
-        const map = L.map('map').setView([28.1099, 30.7503], 13);
+        // ================= 1. إعداد الخريطة =================
+        const map = L.map('map').setView([28.1099, 30.7503], 14);
 
-        // طبقات الخرائط (قمر صناعي هجين + خريطة شوارع)
         const googleHybrid = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
             maxZoom: 21,
             attribution: 'Google Satellite'
@@ -321,39 +559,64 @@
             "خريطة شوارع (OSM)": osmLayer
         }, null, { position: 'topleft' }).addTo(map);
 
-        // 2. المتغيرات الخاصة بالرسم
-        let points = []; // مصفوفة لحفظ الإحداثيات [lng, lat]
-        let markers = []; // لحفظ دبابيس النقاط
-        let segmentLabels = []; // لحفظ ملصقات أطوال الأضلاع
+        // متغيرات الرسم
+        let points = [];        // مصفوفة تحفظ الإحداثيات [lng, lat]
+        let markers = [];       // مصفوفة تحفظ دبابيس النقاط القابلة للسحب
+        let segmentLabels = []; // ملصقات أطوال الأضلاع
         let polygonLayer = null;
         let polylineLayer = null;
 
-        // 3. التفاعل عند الضغط على الخريطة
+        // ================= 2. تحويل الإحداثيات إلى نظام UTM المتري =================
+        function latLngToUTM(lat, lng) {
+            const zone = Math.floor((lng + 180) / 6) + 1;
+            const hemisphere = lat >= 0 ? '+north' : '+south';
+            const utmProj = `+proj=utm +zone=${zone} ${hemisphere} +datum=WGS84 +units=m +no_defs`;
+            const [easting, northing] = proj4('EPSG:4326', utmProj, [lng, lat]);
+            return {
+                easting: easting,
+                northing: northing,
+                zoneStr: `${zone}${lat >= 0 ? 'N' : 'S'}`
+            };
+        }
+
+        // ================= 3. إضافة النقاط ودعم السحب والإفلات (Drag & Drop) =================
         map.on('click', function(e) {
-            const lat = e.latlng.lat;
-            const lng = e.latlng.lng;
-
-            points.push([lng, lat]);
-
-            // إضافة علامة (دبوس دائري) للنقطة
-            const marker = L.circleMarker([lat, lng], {
-                radius: 6,
-                fillColor: "#f59e0b",
-                color: "#ffffff",
-                weight: 2,
-                opacity: 1,
-                fillOpacity: 1
-            }).addTo(map);
-            
-            marker.bindTooltip(`نقطة ${points.length}`, { permanent: false, direction: 'top' });
-            markers.push(marker);
-
-            updateShapeAndCalculations();
+            addVertex(e.latlng.lat, e.latlng.lng);
         });
 
-        // 4. تحديث الشكل الهندسي والحسابات
+        function addVertex(lat, lng) {
+            points.push([lng, lat]);
+            const ptNumber = points.length;
+
+            // إنشاء أيقونة مرقمة قابلة للسحب
+            const vertexIcon = L.divIcon({
+                className: 'vertex-marker',
+                html: `${ptNumber}`,
+                iconSize: [22, 22],
+                iconAnchor: [11, 11]
+            });
+
+            const marker = L.marker([lat, lng], {
+                draggable: true,
+                icon: vertexIcon
+            }).addTo(map);
+
+            // تحديث الشكل والمساحة لحظياً أثناء سحب النقطة
+            marker.on('drag', function(event) {
+                const idx = markers.indexOf(marker);
+                if (idx !== -1) {
+                    const newPos = event.target.getLatLng();
+                    points[idx] = [newPos.lng, newPos.lat];
+                    updateShapeAndCalculations();
+                }
+            });
+
+            markers.push(marker);
+            updateShapeAndCalculations();
+        }
+
+        // ================= 4. تحديث الشكل الهندسي والحسابات =================
         function updateShapeAndCalculations() {
-            // مسح الأشكال والملصقات القديمة لإعادة رسمها
             if (polygonLayer) map.removeLayer(polygonLayer);
             if (polylineLayer) map.removeLayer(polylineLayer);
             segmentLabels.forEach(label => map.removeLayer(label));
@@ -361,27 +624,26 @@
 
             const count = points.length;
             document.getElementById('points-count').innerText = count;
-            updateTable();
+            updateUTMTable();
 
             if (count < 2) {
-                resetResults();
+                document.getElementById('area-m2').innerText = '0.00 م²';
+                document.getElementById('perimeter-m').innerText = '0.00 م';
+                displayFeddan(0, 'val-feddan', 'val-qirat', 'val-sahm');
                 return;
             }
 
-            // تحويل النقاط لصيغة [lat, lng] الخاصة بمكتبة Leaflet
             const latLngs = points.map(p => [p[1], p[0]]);
 
             if (count === 2) {
-                // رسم خط فقط إذا كانت نقطتين
                 polylineLayer = L.polyline(latLngs, { color: '#38bdf8', weight: 3 }).addTo(map);
                 const distance = calculateSegmentDistance(points[0], points[1]);
                 addSegmentLabel(points[0], points[1], distance);
                 
                 document.getElementById('perimeter-m').innerText = distance.toFixed(2) + ' م';
                 document.getElementById('area-m2').innerText = '0.00 م²';
-                updateFeddanUI(0);
+                displayFeddan(0, 'val-feddan', 'val-qirat', 'val-sahm');
             } else if (count >= 3) {
-                // رسم مضلع مغلق
                 polygonLayer = L.polygon(latLngs, {
                     color: '#38bdf8',
                     fillColor: '#0284c7',
@@ -389,37 +651,30 @@
                     weight: 3
                 }).addTo(map);
 
-                // حساب أطوال الأضلاع والمحيط
                 let totalPerimeter = 0;
                 for (let i = 0; i < count; i++) {
                     const p1 = points[i];
-                    const p2 = points[(i + 1) % count]; // إغلاق المضلع مع النقطة الأولى
+                    const p2 = points[(i + 1) % count];
                     const dist = calculateSegmentDistance(p1, p2);
                     totalPerimeter += dist;
                     addSegmentLabel(p1, p2, dist);
                 }
 
-                // حساب المساحة باستخدام Turf.js
                 const closedPoints = [...points, points[0]];
                 const turfPolygon = turf.polygon([closedPoints]);
                 const areaSqMeters = turf.area(turfPolygon);
 
-                // تحديث الواجهة
                 document.getElementById('area-m2').innerText = areaSqMeters.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' م²';
                 document.getElementById('perimeter-m').innerText = totalPerimeter.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' م';
                 
-                updateFeddanUI(areaSqMeters);
+                displayFeddan(areaSqMeters, 'val-feddan', 'val-qirat', 'val-sahm');
             }
         }
 
-        // حساب المسافة بين نقطتين بالمتر
         function calculateSegmentDistance(p1, p2) {
-            const from = turf.point(p1);
-            const to = turf.point(p2);
-            return turf.distance(from, to, { units: 'meters' });
+            return turf.distance(turf.point(p1), turf.point(p2), { units: 'meters' });
         }
 
-        // وضع طول الضلع في منتصف الخط على الخريطة
         function addSegmentLabel(p1, p2, distance) {
             const midLat = (p1[1] + p2[1]) / 2;
             const midLng = (p1[0] + p2[0]) / 2;
@@ -436,14 +691,13 @@
             segmentLabels.push(label);
         }
 
-        // 5. تحويل المتر المربع إلى (فدان - قيراط - سهم)
-        function updateFeddanUI(sqMeters) {
+        // تحويل المساحة من متر مربع إلى فدان وقيراط وسهم
+        function displayFeddan(sqMeters, feddanId, qiratId, sahmId) {
             const FEDDAN_AREA = 4200.833333333333;
-            const QIRAT_AREA = FEDDAN_AREA / 24; // 175.034722 م2
-            const SAHM_AREA = QIRAT_AREA / 24;   // 7.293113 م2
+            const QIRAT_AREA = FEDDAN_AREA / 24;
+            const SAHM_AREA = QIRAT_AREA / 24;
 
             let remaining = sqMeters;
-
             const feddans = Math.floor(remaining / FEDDAN_AREA);
             remaining = remaining % FEDDAN_AREA;
 
@@ -452,36 +706,33 @@
 
             const sahms = (remaining / SAHM_AREA).toFixed(1);
 
-            document.getElementById('val-feddan').innerText = feddans;
-            document.getElementById('val-qirat').innerText = qirats;
-            document.getElementById('val-sahm').innerText = sahms;
+            document.getElementById(feddanId).innerText = feddans;
+            document.getElementById(qiratId).innerText = qirats;
+            document.getElementById(sahmId).innerText = sahms;
         }
 
-        // تحديث جدول الإحداثيات
-        function updateTable() {
+        // تحديث جدول إحداثيات الـ UTM
+        function updateUTMTable() {
             const tbody = document.getElementById('coords-table-body');
             if (points.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3" style="color:#94a3b8;">لم يتم إضافة نقاط بعد</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" style="color:#94a3b8;">اضغط على الخريطة لإضافة نقاط</td></tr>';
                 return;
             }
 
-            tbody.innerHTML = points.map((p, index) => `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td>${p[1].toFixed(6)}</td>
-                    <td>${p[0].toFixed(6)}</td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = points.map((p, index) => {
+                const utm = latLngToUTM(p[1], p[0]);
+                return `
+                    <tr>
+                        <td><b>${index + 1}</b></td>
+                        <td>${utm.easting.toFixed(2)}</td>
+                        <td>${utm.northing.toFixed(2)}</td>
+                        <td>${utm.zoneStr}</td>
+                    </tr>
+                `;
+            }).join('');
         }
 
-        // تصفير النتائج
-        function resetResults() {
-            document.getElementById('area-m2').innerText = '0.00 م²';
-            document.getElementById('perimeter-m').innerText = '0.00 م';
-            updateFeddanUI(0);
-        }
-
-        // التراجع عن آخر نقطة
+        // التراجع والمسح
         function undoLastPoint() {
             if (points.length === 0) return;
             points.pop();
@@ -490,7 +741,6 @@
             updateShapeAndCalculations();
         }
 
-        // مسح الخريطة بالكامل
         function clearMap() {
             points = [];
             markers.forEach(m => map.removeLayer(m));
@@ -498,23 +748,18 @@
             updateShapeAndCalculations();
         }
 
-        // تحديد موقع المستخدم عبر الـ GPS
+        // تحديد موقع GPS
         function locateUser() {
             map.locate({ setView: true, maxZoom: 19 });
         }
-
         map.on('locationfound', function(e) {
-            L.popup()
-                .setLatLng(e.latlng)
-                .setContent("تم تحديد موقعك الحالي بدقة " + Math.round(e.accuracy) + " متر")
-                .openOn(map);
+            L.popup().setLatLng(e.latlng).setContent("موقعك الحالي (الدقة: " + Math.round(e.accuracy) + " متر)").openOn(map);
         });
-
         map.on('locationerror', function() {
-            alert("تعذر الوصول إلى موقعك. تأكد من تفعيل خدمة الموقع (GPS).");
+            alert("يرجى تفعيل خدمة تحديد الموقع (GPS) في جهازك.");
         });
 
-        // تصدير النقاط كملف CSV
+        // تصدير ملف CSV شامل (UTM + Lat/Lng)
         function exportCSV() {
             if (points.length === 0) {
                 alert("لا توجد نقاط لتصديرها!");
@@ -522,19 +767,106 @@
             }
 
             let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-            csvContent += "Point_ID,Latitude,Longitude\n";
+            csvContent += "Point_ID,Easting_X,Northing_Y,UTM_Zone,Latitude,Longitude\n";
 
             points.forEach((p, idx) => {
-                csvContent += `${idx + 1},${p[1].toFixed(7)},${p[0].toFixed(7)}\n`;
+                const utm = latLngToUTM(p[1], p[0]);
+                csvContent += `${idx + 1},${utm.easting.toFixed(3)},${utm.northing.toFixed(3)},${utm.zoneStr},${p[1].toFixed(7)},${p[0].toFixed(7)}\n`;
             });
 
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "Survey_Coordinates.csv");
+            link.setAttribute("download", "Survey_UTM_Coordinates.csv");
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+        }
+
+        // ================= 5. الحاسبة اليدوية (قاعدة هيرون للأضلاع والأوتار) =================
+        function heronArea(a, b, c) {
+            // التحقق من متباينة المثلث
+            if (a + b <= c || a + c <= b || b + c <= a) return -1;
+            const s = (a + b + c) / 2;
+            return Math.sqrt(s * (s - a) * (s - b) * (s - c));
+        }
+
+        function calculateManualShape() {
+            const a = parseFloat(document.getElementById('side-a').value) || 0;
+            const b = parseFloat(document.getElementById('side-b').value) || 0;
+            const diag = parseFloat(document.getElementById('side-diag').value) || 0;
+            const c = parseFloat(document.getElementById('side-c').value) || 0;
+            const d = parseFloat(document.getElementById('side-d').value) || 0;
+
+            if (a <= 0 || b <= 0 || diag <= 0) {
+                alert("يرجى إدخال أطوال المثلث الأول على الأقل (الضلع الأول، الضلع الثاني، والوتر).");
+                return;
+            }
+
+            const area1 = heronArea(a, b, diag);
+            if (area1 === -1) {
+                alert("خطأ هندسي في المثلث الأول: مجموع أي ضلعين يجب أن يكون أكبر من الضلع الثالث (الوتر)!");
+                return;
+            }
+
+            let area2 = 0;
+            if (c > 0 && d > 0) {
+                area2 = heronArea(c, d, diag);
+                if (area2 === -1) {
+                    alert("خطأ هندسي في المثلث الثاني: أطوال الضلع الثالث والرابع لا تتقاطع هندسياً مع هذا الوتر!");
+                    return;
+                }
+            }
+
+            const totalArea = area1 + area2;
+
+            document.getElementById('tri1-area').innerText = area1.toFixed(2) + ' م²';
+            document.getElementById('tri2-area').innerText = area2.toFixed(2) + ' م²';
+            document.getElementById('manual-total-m2').innerText = totalArea.toFixed(2) + ' م²';
+
+            displayFeddan(totalArea, 'm-feddan', 'm-qirat', 'm-sahm');
+        }
+
+        // ================= 6. حاسبة المسافة والانحراف (COGO) =================
+        function calculateCOGO() {
+            const e1 = parseFloat(document.getElementById('cogo-e1').value);
+            const n1 = parseFloat(document.getElementById('cogo-n1').value);
+            const e2 = parseFloat(document.getElementById('cogo-e2').value);
+            const n2 = parseFloat(document.getElementById('cogo-n2').value);
+
+            if (isNaN(e1) || isNaN(n1) || isNaN(e2) || isNaN(n2)) {
+                alert("يرجى إدخال إحداثيات النقطتين بالكامل.");
+                return;
+            }
+
+            const dE = e2 - e1;
+            const dN = n2 - n1;
+            const distance = Math.sqrt(dE * dE + dN * dN);
+
+            // حساب الانحراف الدائري من الشمال
+            let azimuthDeg = Math.atan2(dE, dN) * (180 / Math.PI);
+            if (azimuthDeg < 0) azimuthDeg += 360;
+
+            // تحويل الدرجات العشرية إلى درجات ودقائق وثواني (DMS)
+            const deg = Math.floor(azimuthDeg);
+            const minFloat = (azimuthDeg - deg) * 60;
+            const min = Math.floor(minFloat);
+            const sec = ((minFloat - min) * 60).toFixed(1);
+
+            document.getElementById('cogo-dist').innerText = distance.toFixed(3) + ' م';
+            document.getElementById('cogo-az-dms').innerText = `${deg}° ${min}' ${sec}"`;
+            document.getElementById('cogo-az-dec').innerText = azimuthDeg.toFixed(4) + '°';
+            document.getElementById('cogo-de').innerText = dE.toFixed(3) + ' م';
+            document.getElementById('cogo-dn').innerText = dN.toFixed(3) + ' م';
+        }
+
+        // ================= 7. التنقل بين التبويبات =================
+        function switchTab(tabId, btnElement) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+
+            document.getElementById(tabId).classList.add('active');
+            btnElement.classList.add('active');
         }
     </script>
 </body>
