@@ -1,814 +1,541 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تطبيق المساحة وحساب الأراضي</title>
+    
+    <!-- خط القاهرة لمظهر احترافي -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- مكتبة الخرائط Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Cairo', sans-serif;
+        }
 
-    <title>Ahmed Samir | GIS & Geomatics Portfolio</title>
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #f4f6f9;
+            overflow: hidden;
+        }
 
-    <meta name="description"
-          content="Ahmed Samir - GIS & Geomatics Student Portfolio">
+        /* الشريط العلوي */
+        header {
+            background-color: #1e293b;
+            color: #ffffff;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
 
-    <link rel="stylesheet" href="style.css">
+        header h1 {
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+        /* حاوية التطبيق */
+        .main-container {
+            display: flex;
+            flex: 1;
+            position: relative;
+            height: calc(100vh - 55px);
+        }
+
+        /* الخريطة */
+        #map {
+            flex: 1;
+            height: 100%;
+            z-index: 1;
+            cursor: crosshair;
+        }
+
+        /* لوحة التحكم والنتائج */
+        .sidebar {
+            width: 340px;
+            background: #ffffff;
+            padding: 15px;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 500;
+            overflow-y: auto;
+        }
+
+        .card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .card-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 8px;
+            border-bottom: 2px solid #3b82f6;
+            display: inline-block;
+            padding-bottom: 2px;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 0.95rem;
+        }
+
+        .result-value {
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .feddan-box {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        .unit-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 6px;
+            padding: 8px 4px;
+        }
+
+        .unit-box span {
+            display: block;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1d4ed8;
+        }
+
+        .unit-box small {
+            font-size: 0.8rem;
+            color: #475569;
+        }
+
+        /* الأزرار */
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        button {
+            padding: 9px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .btn-primary { background: #2563eb; color: white; grid-column: span 2; }
+        .btn-primary:hover { background: #1d4ed8; }
+
+        .btn-warning { background: #f59e0b; color: white; }
+        .btn-warning:hover { background: #d97706; }
+
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-danger:hover { background: #dc2626; }
+
+        .btn-success { background: #10b981; color: white; grid-column: span 2; }
+        .btn-success:hover { background: #059669; }
+
+        /* جدول الإحداثيات */
+        .coords-list {
+            max-height: 180px;
+            overflow-y: auto;
+            font-size: 0.8rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+        }
+
+        th, td {
+            padding: 6px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            background: #f1f5f9;
+            position: sticky;
+            top: 0;
+        }
+
+        /* تصميم ملصق طول الضلع على الخريطة */
+        .segment-label {
+            background: rgba(15, 23, 42, 0.85);
+            color: #fff;
+            border: 1px solid #38bdf8;
+            border-radius: 4px;
+            padding: 1px 6px;
+            font-size: 11px;
+            font-weight: bold;
+            white-space: nowrap;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+        }
+
+        /* التجاوب مع شاشات الهواتف */
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column-reverse;
+            }
+            .sidebar {
+                width: 100%;
+                height: 45%;
+                padding: 10px;
+                gap: 10px;
+            }
+            #map {
+                height: 55%;
+            }
+        }
+    </style>
 </head>
-
 <body>
 
-<!-- ================= HEADER ================= -->
+    <header>
+        <h1>📐 المسّاح الرقمي - حساب المساحات</h1>
+        <small>اضغط على الخريطة لوضع النقاط</small>
+    </header>
 
-<header class="header">
-
-    <div class="container nav-container">
-
-        <a href="#home" class="logo">
-            <span>AS</span>
-            <div>
-                <strong>Ahmed Samir</strong>
-                <small>GIS & Geomatics</small>
+    <div class="main-container">
+        <!-- القائمة الجانبية للنتائج والأدوات -->
+        <div class="sidebar">
+            
+            <!-- أزرار التحكم -->
+            <div class="controls">
+                <button class="btn-primary" onclick="locateUser()">📍 موقعي الحالي (GPS)</button>
+                <button class="btn-warning" onclick="undoLastPoint()">↩️ تراجع عن نقطة</button>
+                <button class="btn-danger" onclick="clearMap()">🗑️ مسح الكل</button>
             </div>
-        </a>
 
-        <nav class="navbar" id="navbar">
+            <!-- كارت المساحة والمحيط -->
+            <div class="card">
+                <div class="card-title">نتائج القياس</div>
+                <div class="result-item">
+                    <span>المساحة بالمتر المربع:</span>
+                    <span class="result-value" id="area-m2">0.00 م²</span>
+                </div>
+                <div class="result-item">
+                    <span>المحيط (مجموع الأضلاع):</span>
+                    <span class="result-value" id="perimeter-m">0.00 م</span>
+                </div>
+                <div class="result-item">
+                    <span>عدد النقاط المرفوعة:</span>
+                    <span class="result-value" id="points-count">0</span>
+                </div>
 
-            <a href="#home" class="nav-link active">Home</a>
-            <a href="#about" class="nav-link">About</a>
-            <a href="#skills" class="nav-link">Skills</a>
-            <a href="#projects" class="nav-link">Projects</a>
-            <a href="#certificates" class="nav-link">Certificates</a>
-            <a href="#contact" class="nav-link">Contact</a>
+                <!-- التفقيط بالوحدات المصرية -->
+                <div class="feddan-box">
+                    <div class="unit-box">
+                        <span id="val-feddan">0</span>
+                        <small>فدان</small>
+                    </div>
+                    <div class="unit-box">
+                        <span id="val-qirat">0</span>
+                        <small>قيراط</small>
+                    </div>
+                    <div class="unit-box">
+                        <span id="val-sahm">0.0</span>
+                        <small>سهم</small>
+                    </div>
+                </div>
+            </div>
 
-        </nav>
-
-        <div class="nav-actions">
-
-            <button id="themeToggle" class="icon-btn" title="Change Theme">
-                🌙
-            </button>
-
-            <button id="menuToggle" class="menu-btn">
-                ☰
-            </button>
+            <!-- قائمة الإحداثيات -->
+            <div class="card" style="flex: 1; display: flex; flex-direction: column;">
+                <div class="card-title">إحداثيات النقاط (WGS84)</div>
+                <div class="coords-list">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>م</th>
+                                <th>دائرة العرض (Lat)</th>
+                                <th>خط الطول (Lng)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="coords-table-body">
+                            <tr><td colspan="3" style="color:#94a3b8;">لم يتم إضافة نقاط بعد</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <button class="btn-success" style="margin-top: 10px;" onclick="exportCSV()">📥 تصدير الإحداثيات (CSV)</button>
+            </div>
 
         </div>
 
+        <!-- حاوية الخريطة -->
+        <div id="map"></div>
     </div>
 
-</header>
-
-
-<!-- ================= HERO ================= -->
-
-<section class="hero" id="home">
-
-    <div class="hero-grid"></div>
-
-    <div class="container hero-container">
-
-        <div class="hero-content">
-
-            <div class="hero-badge">
-                <span class="status-dot"></span>
-                Available for Learning & Opportunities
-            </div>
-
-            <p class="hero-small-title">
-                GIS & GEOMATICS STUDENT
-            </p>
-
-            <h1>
-                Hi, I'm
-                <span>Ahmed Samir</span>
-            </h1>
-
-            <h2>
-                GIS & Geomatics Enthusiast
-            </h2>
-
-            <p class="hero-description">
-                Geography student interested in GIS, Remote Sensing,
-                Digital Mapping, Surveying and Geospatial Technologies.
-                I enjoy turning geographic data into useful maps and
-                visual information.
-            </p>
-
-            <div class="hero-buttons">
-
-                <a href="#projects" class="btn btn-primary">
-                    View My Projects
-                    <span>→</span>
-                </a>
-
-                <a href="#contact" class="btn btn-outline">
-                    Contact Me
-                </a>
-
-            </div>
-
-            <div class="hero-socials">
-
-                <a href="https://www.linkedin.com/in/ahmed-samir-261773343/"
-                   target="_blank"
-                   rel="noopener noreferrer">
-                    LinkedIn
-                </a>
-
-                <span>•</span>
-
-                <a href="mailto:eng.ahmedsamir.gis@gmail.com">
-                    Email
-                </a>
-
-            </div>
-
-        </div>
-
-
-        <div class="hero-visual">
-
-            <div class="map-card">
-
-                <div class="map-top">
-                    <span>GIS PROJECT</span>
-                    <span>●</span>
-                </div>
-
-                <div class="map-area">
-
-                    <div class="map-grid"></div>
-
-                    <div class="map-pin pin-one">●</div>
-                    <div class="map-pin pin-two">●</div>
-                    <div class="map-pin pin-three">●</div>
-
-                    <div class="route route-one"></div>
-                    <div class="route route-two"></div>
-
-                </div>
-
-                <div class="map-bottom">
-
-                    <div>
-                        <small>PROJECT</small>
-                        <strong>Digital Mapping</strong>
-                    </div>
-
-                    <div>
-                        <small>TOOLS</small>
-                        <strong>ArcGIS Pro</strong>
-                    </div>
-
-                </div>
-
-            </div>
-
-            <div class="floating-card card-one">
-                <span>🗺️</span>
-                <div>
-                    <strong>GIS</strong>
-                    <small>Mapping</small>
-                </div>
-            </div>
-
-            <div class="floating-card card-two">
-                <span>📡</span>
-                <div>
-                    <strong>Remote Sensing</strong>
-                    <small>Satellite Data</small>
-                </div>
-            </div>
-
-        </div>
-
-    </div>
-
-</section>
-
-
-<!-- ================= ABOUT ================= -->
-
-<section class="section" id="about">
-
-    <div class="container">
-
-        <div class="section-heading">
-
-            <span>01 — ABOUT ME</span>
-
-            <h2>
-                Building my path in
-                <strong>Geospatial Technology</strong>
-            </h2>
-
-        </div>
-
-
-        <div class="about-grid">
-
-            <div class="about-text">
-
-                <p>
-                    I'm Ahmed Samir, a Geography student at
-                    Minya University, Faculty of Arts,
-                    Geography Department.
-                </p>
-
-                <p>
-                    My main interests are Geographic Information
-                    Systems (GIS), Remote Sensing, Digital Mapping,
-                    Surveying and Geospatial Data.
-                </p>
-
-                <p>
-                    I'm continuously developing my technical skills
-                    through practical projects, courses and
-                    self-learning.
-                </p>
-
-                <a href="#contact" class="text-link">
-                    Let's connect →
-                </a>
-
-            </div>
-
-
-            <div class="about-info">
-
-                <div class="info-card">
-                    <span>🎓</span>
-                    <div>
-                        <small>University</small>
-                        <strong>Minya University</strong>
-                    </div>
-                </div>
-
-                <div class="info-card">
-                    <span>📚</span>
-                    <div>
-                        <small>Department</small>
-                        <strong>Geography – Maps</strong>
-                    </div>
-                </div>
-
-                <div class="info-card">
-                    <span>📅</span>
-                    <div>
-                        <small>Expected Graduation</small>
-                        <strong>2027</strong>
-                    </div>
-                </div>
-
-                <div class="info-card">
-                    <span>📍</span>
-                    <div>
-                        <small>Location</small>
-                        <strong>Minya, Egypt</strong>
-                    </div>
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</section>
-
-
-<!-- ================= SKILLS ================= -->
-
-<section class="section section-alt" id="skills">
-
-    <div class="container">
-
-        <div class="section-heading">
-
-            <span>02 — SKILLS</span>
-
-            <h2>
-                Tools & <strong>Technologies</strong>
-            </h2>
-
-        </div>
-
-
-        <div class="skills-grid">
-
-            <div class="skill-card">
-
-                <div class="skill-icon">🌍</div>
-
-                <h3>ArcGIS Pro</h3>
-
-                <p>
-                    GIS mapping, spatial analysis,
-                    geoprocessing and map design.
-                </p>
-
-                <div class="skill-bar">
-                    <span style="width: 75%;"></span>
-                </div>
-
-            </div>
-
-
-            <div class="skill-card">
-
-                <div class="skill-icon">📐</div>
-
-                <h3>AutoCAD</h3>
-
-                <p>
-                    Technical drawings, CAD workflows
-                    and surveying-related drawings.
-                </p>
-
-                <div class="skill-bar">
-                    <span style="width: 70%;"></span>
-                </div>
-
-            </div>
-
-
-            <div class="skill-card">
-
-                <div class="skill-icon">🐍</div>
-
-                <h3>Python</h3>
-
-                <p>
-                    Learning Python programming with
-                    focus on future GIS automation.
-                </p>
-
-                <div class="skill-bar">
-                    <span style="width: 45%;"></span>
-                </div>
-
-            </div>
-
-
-            <div class="skill-card">
-
-                <div class="skill-icon">🛰️</div>
-
-                <h3>Remote Sensing</h3>
-
-                <p>
-                    Satellite imagery, raster data and
-                    Earth observation fundamentals.
-                </p>
-
-                <div class="skill-bar">
-                    <span style="width: 55%;"></span>
-                </div>
-
-            </div>
-
-
-            <div class="skill-card">
-
-                <div class="skill-icon">📏</div>
-
-                <h3>Surveying</h3>
-
-                <p>
-                    Surveying fundamentals and
-                    leveling equipment.
-                </p>
-
-                <div class="skill-bar">
-                    <span style="width: 60%;"></span>
-                </div>
-
-            </div>
-
-
-            <div class="skill-card">
-
-                <div class="skill-icon">📊</div>
-
-                <h3>Microsoft Excel</h3>
-
-                <p>
-                    Data organization, calculations,
-                    tables and analysis.
-                </p>
-
-                <div class="skill-bar">
-                    <span style="width: 70%;"></span>
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</section>
-
-
-<!-- ================= PROJECTS ================= -->
-
-<section class="section" id="projects">
-
-    <div class="container">
-
-        <div class="section-heading">
-
-            <span>03 — PROJECTS</span>
-
-            <h2>
-                Selected <strong>Projects</strong>
-            </h2>
-
-            <p>
-                A collection of my GIS, mapping and
-                geospatial projects.
-            </p>
-
-        </div>
-
-
-        <div class="projects-grid">
-
-
-            <!-- PROJECT 1 -->
-
-            <article class="project-card">
-
-                <div class="project-image project-map">
-
-                    <div class="project-label">
-                        GIS
-                    </div>
-
-                    <div class="fake-map"></div>
-
-                </div>
-
-                <div class="project-content">
-
-                    <div class="project-type">
-                        GIS / 3D Mapping
-                    </div>
-
-                    <h3>
-                        First 3D Map Project
-                    </h3>
-
-                    <p>
-                        My first 3D mapping project created
-                        while developing my GIS skills.
-                    </p>
-
-                    <div class="project-tools">
-
-                        <span>ArcGIS Pro</span>
-                        <span>3D Mapping</span>
-
-                    </div>
-
-                    <a href="#" class="project-link">
-                        View Project →
-                    </a>
-
-                </div>
-
-            </article>
-
-
-            <!-- PROJECT 2 -->
-
-            <article class="project-card">
-
-                <div class="project-image satellite-project">
-
-                    <div class="project-label">
-                        REMOTE SENSING
-                    </div>
-
-                    <div class="satellite-circle"></div>
-
-                </div>
-
-                <div class="project-content">
-
-                    <div class="project-type">
-                        Remote Sensing
-                    </div>
-
-                    <h3>
-                        Satellite Imagery Analysis
-                    </h3>
-
-                    <p>
-                        A future project for analyzing
-                        satellite imagery and geographic data.
-                    </p>
-
-                    <div class="project-tools">
-
-                        <span>Landsat</span>
-                        <span>Sentinel</span>
-
-                    </div>
-
-                    <a href="#" class="project-link">
-                        View Project →
-                    </a>
-
-                </div>
-
-            </article>
-
-
-            <!-- PROJECT 3 -->
-
-            <article class="project-card">
-
-                <div class="project-image cad-project">
-
-                    <div class="project-label">
-                        CAD
-                    </div>
-
-                    <div class="cad-lines"></div>
-
-                </div>
-
-                <div class="project-content">
-
-                    <div class="project-type">
-                        CAD / Surveying
-                    </div>
-
-                    <h3>
-                        Surveying & AutoCAD Project
-                    </h3>
-
-                    <p>
-                        Technical drawings and surveying
-                        workflows using CAD software.
-                    </p>
-
-                    <div class="project-tools">
-
-                        <span>AutoCAD</span>
-                        <span>Surveying</span>
-
-                    </div>
-
-                    <a href="#" class="project-link">
-                        View Project →
-                    </a>
-
-                </div>
-
-            </article>
-
-
-        </div>
-
-
-        <div class="center-button">
-
-            <button class="btn btn-outline" id="moreProjects">
-                More Projects
-            </button>
-
-        </div>
-
-    </div>
-
-</section>
-
-
-<!-- ================= CERTIFICATES ================= -->
-
-<section class="section section-alt" id="certificates">
-
-    <div class="container">
-
-        <div class="section-heading">
-
-            <span>04 — CERTIFICATES</span>
-
-            <h2>
-                Courses & <strong>Certificates</strong>
-            </h2>
-
-        </div>
-
-
-        <div class="certificates-grid">
-
-            <div class="certificate-card">
-
-                <div class="certificate-icon">
-                    🏆
-                </div>
-
-                <div>
-
-                    <span>TRAINING</span>
-
-                    <h3>
-                        GIS Training
-                    </h3>
-
-                    <p>
-                        Add your certificate details here.
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <div class="certificate-card">
-
-                <div class="certificate-icon">
-                    📜
-                </div>
-
-                <div>
-
-                    <span>COURSE</span>
-
-                    <h3>
-                        Remote Sensing
-                    </h3>
-
-                    <p>
-                        Add your certificate details here.
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <div class="certificate-card">
-
-                <div class="certificate-icon">
-                    💻
-                </div>
-
-                <div>
-
-                    <span>COURSE</span>
-
-                    <h3>
-                        Python
-                    </h3>
-
-                    <p>
-                        Python programming course.
-                    </p>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</section>
-
-
-<!-- ================= CONTACT ================= -->
-
-<section class="section contact-section" id="contact">
-
-    <div class="container">
-
-        <div class="contact-box">
-
-            <div class="contact-content">
-
-                <span>05 — CONTACT</span>
-
-                <h2>
-                    Let's work on something
-                    <strong>geospatial.</strong>
-                </h2>
-
-                <p>
-                    I'm always interested in learning,
-                    collaborating and working on GIS
-                    and geospatial projects.
-                </p>
-
-                <div class="contact-buttons">
-
-                    <a href="mailto:eng.ahmedsamir.gis@gmail.com"
-                       class="btn btn-primary">
-                        Send Email
-                    </a>
-
-                    <a href="https://www.linkedin.com/in/ahmed-samir-261773343/"
-                       target="_blank"
-                       rel="noopener noreferrer"
-                       class="btn btn-outline">
-                        LinkedIn
-                    </a>
-
-                </div>
-
-            </div>
-
-
-            <div class="contact-details">
-
-                <div class="contact-item">
-
-                    <span>📧</span>
-
-                    <div>
-                        <small>Email</small>
-                        <a href="mailto:eng.ahmedsamir.gis@gmail.com">
-                            eng.ahmedsamir.gis@gmail.com
-                        </a>
-                    </div>
-
-                </div>
-
-
-                <div class="contact-item">
-
-                    <span>📱</span>
-
-                    <div>
-                        <small>Phone</small>
-                        <a href="tel:01015912371">
-                            01015912371
-                        </a>
-                    </div>
-
-                </div>
-
-
-                <div class="contact-item">
-
-                    <span>📍</span>
-
-                    <div>
-                        <small>Location</small>
-                        <strong>Minya, Egypt</strong>
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</section>
-
-
-<!-- ================= FOOTER ================= -->
-
-<footer class="footer">
-
-    <div class="container footer-container">
-
-        <div>
-
-            <strong>Ahmed Samir</strong>
-
-            <p>
-                GIS & Geomatics Student
-            </p>
-
-        </div>
-
-
-        <p>
-            © <span id="currentYear"></span>
-            Ahmed Samir. All Rights Reserved.
-        </p>
-
-    </div>
-
-</footer>
-
-
-<!-- BACK TO TOP -->
-
-<button id="backToTop" class="back-to-top">
-    ↑
-</button>
-
-
-<script src="script.js"></script>
-
+    <!-- مكتبات الجافاسكريبت: Leaflet + Turf.js للحسابات المساحية -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
+
+    <script>
+        // 1. إعداد الخريطة (التركيز الافتراضي على مصر)
+        const map = L.map('map').setView([28.1099, 30.7503], 13);
+
+        // طبقات الخرائط (قمر صناعي هجين + خريطة شوارع)
+        const googleHybrid = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+            maxZoom: 21,
+            attribution: 'Google Satellite'
+        }).addTo(map);
+
+        const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: 'OpenStreetMap'
+        });
+
+        L.control.layers({
+            "قمر صناعي (Satellite)": googleHybrid,
+            "خريطة شوارع (OSM)": osmLayer
+        }, null, { position: 'topleft' }).addTo(map);
+
+        // 2. المتغيرات الخاصة بالرسم
+        let points = []; // مصفوفة لحفظ الإحداثيات [lng, lat]
+        let markers = []; // لحفظ دبابيس النقاط
+        let segmentLabels = []; // لحفظ ملصقات أطوال الأضلاع
+        let polygonLayer = null;
+        let polylineLayer = null;
+
+        // 3. التفاعل عند الضغط على الخريطة
+        map.on('click', function(e) {
+            const lat = e.latlng.lat;
+            const lng = e.latlng.lng;
+
+            points.push([lng, lat]);
+
+            // إضافة علامة (دبوس دائري) للنقطة
+            const marker = L.circleMarker([lat, lng], {
+                radius: 6,
+                fillColor: "#f59e0b",
+                color: "#ffffff",
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 1
+            }).addTo(map);
+            
+            marker.bindTooltip(`نقطة ${points.length}`, { permanent: false, direction: 'top' });
+            markers.push(marker);
+
+            updateShapeAndCalculations();
+        });
+
+        // 4. تحديث الشكل الهندسي والحسابات
+        function updateShapeAndCalculations() {
+            // مسح الأشكال والملصقات القديمة لإعادة رسمها
+            if (polygonLayer) map.removeLayer(polygonLayer);
+            if (polylineLayer) map.removeLayer(polylineLayer);
+            segmentLabels.forEach(label => map.removeLayer(label));
+            segmentLabels = [];
+
+            const count = points.length;
+            document.getElementById('points-count').innerText = count;
+            updateTable();
+
+            if (count < 2) {
+                resetResults();
+                return;
+            }
+
+            // تحويل النقاط لصيغة [lat, lng] الخاصة بمكتبة Leaflet
+            const latLngs = points.map(p => [p[1], p[0]]);
+
+            if (count === 2) {
+                // رسم خط فقط إذا كانت نقطتين
+                polylineLayer = L.polyline(latLngs, { color: '#38bdf8', weight: 3 }).addTo(map);
+                const distance = calculateSegmentDistance(points[0], points[1]);
+                addSegmentLabel(points[0], points[1], distance);
+                
+                document.getElementById('perimeter-m').innerText = distance.toFixed(2) + ' م';
+                document.getElementById('area-m2').innerText = '0.00 م²';
+                updateFeddanUI(0);
+            } else if (count >= 3) {
+                // رسم مضلع مغلق
+                polygonLayer = L.polygon(latLngs, {
+                    color: '#38bdf8',
+                    fillColor: '#0284c7',
+                    fillOpacity: 0.35,
+                    weight: 3
+                }).addTo(map);
+
+                // حساب أطوال الأضلاع والمحيط
+                let totalPerimeter = 0;
+                for (let i = 0; i < count; i++) {
+                    const p1 = points[i];
+                    const p2 = points[(i + 1) % count]; // إغلاق المضلع مع النقطة الأولى
+                    const dist = calculateSegmentDistance(p1, p2);
+                    totalPerimeter += dist;
+                    addSegmentLabel(p1, p2, dist);
+                }
+
+                // حساب المساحة باستخدام Turf.js
+                const closedPoints = [...points, points[0]];
+                const turfPolygon = turf.polygon([closedPoints]);
+                const areaSqMeters = turf.area(turfPolygon);
+
+                // تحديث الواجهة
+                document.getElementById('area-m2').innerText = areaSqMeters.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' م²';
+                document.getElementById('perimeter-m').innerText = totalPerimeter.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' م';
+                
+                updateFeddanUI(areaSqMeters);
+            }
+        }
+
+        // حساب المسافة بين نقطتين بالمتر
+        function calculateSegmentDistance(p1, p2) {
+            const from = turf.point(p1);
+            const to = turf.point(p2);
+            return turf.distance(from, to, { units: 'meters' });
+        }
+
+        // وضع طول الضلع في منتصف الخط على الخريطة
+        function addSegmentLabel(p1, p2, distance) {
+            const midLat = (p1[1] + p2[1]) / 2;
+            const midLng = (p1[0] + p2[0]) / 2;
+
+            const label = L.marker([midLat, midLng], {
+                icon: L.divIcon({
+                    className: 'segment-label',
+                    html: `${distance.toFixed(2)} م`,
+                    iconSize: null
+                }),
+                interactive: false
+            }).addTo(map);
+
+            segmentLabels.push(label);
+        }
+
+        // 5. تحويل المتر المربع إلى (فدان - قيراط - سهم)
+        function updateFeddanUI(sqMeters) {
+            const FEDDAN_AREA = 4200.833333333333;
+            const QIRAT_AREA = FEDDAN_AREA / 24; // 175.034722 م2
+            const SAHM_AREA = QIRAT_AREA / 24;   // 7.293113 م2
+
+            let remaining = sqMeters;
+
+            const feddans = Math.floor(remaining / FEDDAN_AREA);
+            remaining = remaining % FEDDAN_AREA;
+
+            const qirats = Math.floor(remaining / QIRAT_AREA);
+            remaining = remaining % QIRAT_AREA;
+
+            const sahms = (remaining / SAHM_AREA).toFixed(1);
+
+            document.getElementById('val-feddan').innerText = feddans;
+            document.getElementById('val-qirat').innerText = qirats;
+            document.getElementById('val-sahm').innerText = sahms;
+        }
+
+        // تحديث جدول الإحداثيات
+        function updateTable() {
+            const tbody = document.getElementById('coords-table-body');
+            if (points.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="color:#94a3b8;">لم يتم إضافة نقاط بعد</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = points.map((p, index) => `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${p[1].toFixed(6)}</td>
+                    <td>${p[0].toFixed(6)}</td>
+                </tr>
+            `).join('');
+        }
+
+        // تصفير النتائج
+        function resetResults() {
+            document.getElementById('area-m2').innerText = '0.00 م²';
+            document.getElementById('perimeter-m').innerText = '0.00 م';
+            updateFeddanUI(0);
+        }
+
+        // التراجع عن آخر نقطة
+        function undoLastPoint() {
+            if (points.length === 0) return;
+            points.pop();
+            const lastMarker = markers.pop();
+            if (lastMarker) map.removeLayer(lastMarker);
+            updateShapeAndCalculations();
+        }
+
+        // مسح الخريطة بالكامل
+        function clearMap() {
+            points = [];
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+            updateShapeAndCalculations();
+        }
+
+        // تحديد موقع المستخدم عبر الـ GPS
+        function locateUser() {
+            map.locate({ setView: true, maxZoom: 19 });
+        }
+
+        map.on('locationfound', function(e) {
+            L.popup()
+                .setLatLng(e.latlng)
+                .setContent("تم تحديد موقعك الحالي بدقة " + Math.round(e.accuracy) + " متر")
+                .openOn(map);
+        });
+
+        map.on('locationerror', function() {
+            alert("تعذر الوصول إلى موقعك. تأكد من تفعيل خدمة الموقع (GPS).");
+        });
+
+        // تصدير النقاط كملف CSV
+        function exportCSV() {
+            if (points.length === 0) {
+                alert("لا توجد نقاط لتصديرها!");
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+            csvContent += "Point_ID,Latitude,Longitude\n";
+
+            points.forEach((p, idx) => {
+                csvContent += `${idx + 1},${p[1].toFixed(7)},${p[0].toFixed(7)}\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "Survey_Coordinates.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
 </body>
 </html>
