@@ -1,3 +1,4 @@
+// ==================== المتغيرات العامة ====================
 let surveyMap = null;
 let mapPoints = [];
 let mapPolygonLayer = null;
@@ -19,8 +20,13 @@ const themesList = [
     { id: 'daylight', name: 'الوضع النهاري' }
 ];
 let currentThemeIdx = 0;
+let is3DView = false;
 
+// ==================== نظام التشغيل وزر الرجوع الذكي للموبايل ====================
 window.addEventListener('DOMContentLoaded', () => {
+    // تسجيل الصفحة الرئيسية في الهيستوري عند فتح الموقع لمنع الخروج المفاجئ
+    history.replaceState({ view: 'dashboard' }, "", "#dashboard");
+    
     runSplashIntro();
     loadSavedState();
     calcFqsOperations();
@@ -29,18 +35,47 @@ window.addEventListener('DOMContentLoaded', () => {
     generateAiCadPlan();
     renderTriangles();
     recalcLeveling();
+    calcCogo();
     convertFromMeters();
     registerPWA();
 });
 
+// التقاط ضغطة زر الرجوع في الموبايل أو المتصفح لمنع الخروج وإرجاع المستخدم للوحة
+window.addEventListener('popstate', (e) => {
+    if (e.state && e.state.view) {
+        openTool(e.state.view, true);
+    } else {
+        openTool('dashboard', true);
+    }
+});
+
+function openTool(toolName, fromHistory = false) {
+    document.querySelectorAll('.tool-view').forEach(sec => sec.classList.remove('active'));
+    const target = document.getElementById(`view-${toolName}`);
+    if (target) target.classList.add('active');
+
+    // إذا لم يكن الضغط من زر الرجوع الفعلي، ضيفه لسجل المتصفح
+    if (!fromHistory) {
+        history.pushState({ view: toolName }, "", "#" + toolName);
+    }
+
+    if (toolName === 'map') {
+        setTimeout(() => {
+            initMapIfNeeded();
+            surveyMap.invalidateSize();
+        }, 150);
+    }
+}
+
+// ==================== الإنترو السينمائي وتغيير الثيم ====================
 function runSplashIntro() {
     const bar = document.getElementById('introProgress');
     const status = document.getElementById('introStatusText');
     let progress = 0;
     const steps = [
-        "جاري تفعيل أداة الفدان والقيراط والسهم والحيازات...",
+        "جاري تفعيل أداة الفدان والفرش المعماري...",
         "جاري إعداد محرك التجنيب وحساب الضلع المجهول...",
-        "تجهيز لوحة الأوتوكاد الذكي والخرطوشة — م. أحمد سمير...",
+        "تجهيز لوحة الأوتوكاد الذكي 3D — م. أحمد سمير...",
         "اكتمل التحميل — النسخة التجريبية الشاملة جاهزة!"
     ];
 
@@ -70,20 +105,7 @@ function cycleTheme() {
     localStorage.setItem('ds_theme_pref', selected.id);
 }
 
-function openTool(toolName) {
-    document.querySelectorAll('.tool-view').forEach(sec => sec.classList.remove('active'));
-    const target = document.getElementById(`view-${toolName}`);
-    if (target) target.classList.add('active');
-
-    if (toolName === 'map') {
-        setTimeout(() => {
-            initMapIfNeeded();
-            surveyMap.invalidateSize();
-        }, 150);
-    }
-}
-
-// ==================== حاسبة الفدان والقيراط والسهم (تطبيق المساحة الشهير) ====================
+// ==================== تحويل الوحدات (متر/فدان/قيراط/سهم) ====================
 function metersToFQS(areaM2) {
     if (!areaM2 || areaM2 <= 0) return { feddan: 0, qirat: 0, sahm: 0, text: "0 فدان ، 0 قيراط ، 0 سهم" };
     const feddanArea = 4200.833333333333;
@@ -93,34 +115,29 @@ function metersToFQS(areaM2) {
     let rem = areaM2;
     const feddan = Math.floor(rem / feddanArea);
     rem -= feddan * feddanArea;
-
     const qirat = Math.floor(rem / qiratArea);
     rem -= qirat * qiratArea;
-
     const sahm = (rem / sahmArea).toFixed(2);
-    return {
-        feddan,
-        qirat,
-        sahm,
-        text: `${feddan} فدان ، ${qirat} قيراط ، ${sahm} سهم`
-    };
+    
+    return { feddan, qirat, sahm, text: `${feddan} فدان ، ${qirat} قيراط ، ${sahm} سهم` };
 }
 
 function fqsToMeters(f, q, s) {
     return (f * 4200.833333) + (q * 175.034722) + (s * 7.2931134);
 }
 
+// ==================== حاسبة الفدان والقيراط (جمع، طرح، وتثمين) ====================
 function calcFqsOperations() {
-    const p1F = parseFloat(document.getElementById('p1F').value) || 0;
-    const p1Q = parseFloat(document.getElementById('p1Q').value) || 0;
-    const p1S = parseFloat(document.getElementById('p1S').value) || 0;
+    const p1F = parseFloat(document.getElementById('p1F')?.value) || 0;
+    const p1Q = parseFloat(document.getElementById('p1Q')?.value) || 0;
+    const p1S = parseFloat(document.getElementById('p1S')?.value) || 0;
 
-    const p2F = parseFloat(document.getElementById('p2F').value) || 0;
-    const p2Q = parseFloat(document.getElementById('p2Q').value) || 0;
-    const p2S = parseFloat(document.getElementById('p2S').value) || 0;
+    const p2F = parseFloat(document.getElementById('p2F')?.value) || 0;
+    const p2Q = parseFloat(document.getElementById('p2Q')?.value) || 0;
+    const p2S = parseFloat(document.getElementById('p2S')?.value) || 0;
 
-    const opType = document.getElementById('calcOperationType').value;
-    const priceFed = parseFloat(document.getElementById('pricePerFeddan').value) || 600000;
+    const opType = document.getElementById('calcOperationType')?.value || 'add';
+    const priceFed = parseFloat(document.getElementById('pricePerFeddan')?.value) || 600000;
 
     const m1 = fqsToMeters(p1F, p1Q, p1S);
     const m2 = fqsToMeters(p2F, p2Q, p2S);
@@ -129,62 +146,68 @@ function calcFqsOperations() {
     const resultFQS = metersToFQS(finalM2);
     const totalPrice = (finalM2 / 4200.833333) * priceFed;
 
-    document.getElementById('fqsCalcResultsOutput').innerHTML = `
-        <h3 style="color:var(--accent); margin-bottom:12px;"><i class="fa-solid fa-circle-check"></i> نتيجة الحسابات الزراعية الشاملة</h3>
-        <p><b>إ المساحة بالمتر المربع:</b> ${finalM2.toFixed(2)} م²</p>
-        <p style="font-size:1.25rem; color:var(--accent-sec); margin:10px 0;"><b>بالوحدات: ${resultFQS.text}</b></p>
-        <hr style="border-color:var(--border-color); margin:15px 0;">
-        <p><b>إجمالي التثمين المالي للأرض:</b> <span style="color:var(--green); font-size:1.15rem; font-weight:800;">${totalPrice.toLocaleString('en-US', {maximumFractionDigits:0})} جنيه مصري</span></p>
-        <small style="color:var(--text-muted)">حسب سعر الفدان المعتمد (${priceFed.toLocaleString()} ج.م)</small>
-    `;
+    const outBox = document.getElementById('fqsCalcResultsOutput');
+    if(outBox) {
+        outBox.innerHTML = `
+            <h3 style="color:var(--accent); margin-bottom:12px;"><i class="fa-solid fa-circle-check"></i> نتيجة الحسابات الزراعية</h3>
+            <p><b>المساحة بالمتر المربع:</b> ${finalM2.toFixed(2)} م²</p>
+            <p style="font-size:1.25rem; color:var(--accent-sec); margin:10px 0;"><b>بالوحدات: ${resultFQS.text}</b></p>
+            <hr style="border-color:var(--border-color); margin:15px 0;">
+            <p><b>إجمالي التثمين المالي للأرض:</b> <span style="color:var(--green); font-size:1.15rem; font-weight:800;">${totalPrice.toLocaleString('en-US', {maximumFractionDigits:0})} جنيه مصري</span></p>
+            <small style="color:var(--text-muted)">حسب سعر الفدان المعتمد (${priceFed.toLocaleString()} ج.م)</small>
+        `;
+    }
 }
 
 // ==================== أداة التجنيب وفصل المساحة (الضلع المجهول) ====================
 function calcTanjeebSide() {
-    const knownSide = parseFloat(document.getElementById('tanKnownSide').value) || 20; // متر واجهة الشارع
-    const targetQirat = parseFloat(document.getElementById('tanTargetQirat').value) || 5; // القيراط المطلوب فصله
+    const knownSide = parseFloat(document.getElementById('tanKnownSide')?.value) || 20;
+    const targetQirat = parseFloat(document.getElementById('tanTargetQirat')?.value) || 5;
     
-    // المساحة بالمتر المربع للقيراط الواحد = 175.034722 م²
     const targetM2 = targetQirat * (4200.833333 / 24);
-    
-    // حساب عمق الضلع المجهول = المساحة المطلوبة ÷ طول الضلع المعلوم (الواجهة)
     const unknownDepth = knownSide > 0 ? (targetM2 / knownSide) : 0;
 
-    document.getElementById('tanjeebResultsOutput').innerHTML = `
-        <h3 style="color:var(--accent-sec); margin-bottom:12px;"><i class="fa-solid fa-scissors"></i> نتائج التجنيب وفصل المساحة</h3>
-        <p><b>المساحة المراد فصلها:</b> ${targetQirat} قيراط (${targetM2.toFixed(2)} متر مربع)</p>
-        <p><b>طول الواجهة المعلوم على الشارع:</b> ${knownSide} متر</p>
-        <hr style="border-color:var(--border-color); margin:15px 0;">
-        <p style="font-size:1.25rem; color:var(--accent); margin:10px 0;"><b>عمق الضلع الداخلي المجهول: <span style="color:#fff;">${unknownDepth.toFixed(2)} متر</span></b></p>
-        <p style="color:var(--text-muted); font-size:0.9rem;">لتحصيل مساحة ${targetQirat} قيراط بواجهة ${knownSide} م، يجب الدخول داخل الأرض بعمق ${unknownDepth.toFixed(2)} م وتقسيم الخط العرضي.</p>
-    `;
+    const outBox = document.getElementById('tanjeebResultsOutput');
+    if(outBox) {
+        outBox.innerHTML = `
+            <h3 style="color:var(--accent-sec); margin-bottom:12px;"><i class="fa-solid fa-scissors"></i> نتائج التجنيب وفصل المساحة</h3>
+            <p><b>المساحة المراد فصلها:</b> ${targetQirat} قيراط (${targetM2.toFixed(2)} م²)</p>
+            <p><b>طول الواجهة المعلوم:</b> ${knownSide} متر</p>
+            <hr style="border-color:var(--border-color); margin:15px 0;">
+            <p style="font-size:1.25rem; color:var(--accent); margin:10px 0;"><b>عمق الضلع المجهول: <span style="color:#fff;">${unknownDepth.toFixed(2)} متر</span></b></p>
+        `;
+    }
 }
 
 function calcTanjeebByMeters() {
-    const knownSide = parseFloat(document.getElementById('tanKnownSide').value) || 20;
-    const targetM2 = parseFloat(document.getElementById('tanTargetM2').value) || 0;
+    const knownSide = parseFloat(document.getElementById('tanKnownSide')?.value) || 20;
+    const targetM2 = parseFloat(document.getElementById('tanTargetM2')?.value) || 0;
     if (targetM2 <= 0) return;
 
     const unknownDepth = knownSide > 0 ? (targetM2 / knownSide) : 0;
     const fqs = metersToFQS(targetM2);
 
-    document.getElementById('tanjeebResultsOutput').innerHTML = `
-        <h3 style="color:var(--accent-sec); margin-bottom:12px;"><i class="fa-solid fa-scissors"></i> نتائج التجنيب بالمتر المربع</h3>
-        <p><b>المساحة المراد فصلها:</b> ${targetM2} م² (${fqs.text})</p>
-        <p><b>طول الواجهة المعلوم:</b> ${knownSide} متر</p>
-        <hr style="border-color:var(--border-color); margin:15px 0;">
-        <p style="font-size:1.25rem; color:var(--accent);"><b>العمق الداخلي المطلوب: ${unknownDepth.toFixed(2)} متر</b></p>
-    `;
+    const outBox = document.getElementById('tanjeebResultsOutput');
+    if(outBox) {
+        outBox.innerHTML = `
+            <h3 style="color:var(--accent-sec); margin-bottom:12px;"><i class="fa-solid fa-scissors"></i> نتائج التجنيب بالمتر</h3>
+            <p><b>المساحة المراد فصلها:</b> ${targetM2} م² (${fqs.text})</p>
+            <p><b>طول الواجهة:</b> ${knownSide} متر</p>
+            <hr style="border-color:var(--border-color); margin:15px 0;">
+            <p style="font-size:1.25rem; color:var(--accent);"><b>العمق الداخلي المطلوب: ${unknownDepth.toFixed(2)} متر</b></p>
+        `;
+    }
 }
 
-// ==================== خريطة تحديد الشمال في الكروكي ====================
+// ==================== لوحة الكروكي + الخريطة + الفرز الشرعي ====================
 function toggleCroquisCompassMap() {
     const box = document.getElementById('croquisMiniMapBox');
-    if (box.style.display === 'none') {
+    if (!box) return;
+    if (box.style.display === 'none' || box.style.display === '') {
         box.style.display = 'block';
         setTimeout(() => {
             initCroquisCompassMap();
-            croquisNorthMap.invalidateSize();
+            if(croquisNorthMap) croquisNorthMap.invalidateSize();
         }, 150);
     } else {
         box.style.display = 'none';
@@ -203,7 +226,7 @@ function initCroquisCompassMap() {
         compassMarkers.push(m);
 
         if (compassPts.length === 1) {
-            document.getElementById('compassMapStatus').innerText = 'تم تحديد النقطة الأولى — اضغط على النقطة الثانية لنهاية الضلع...';
+            document.getElementById('compassMapStatus').innerText = 'اضغط على النقطة الثانية لنهاية الضلع...';
         } else if (compassPts.length === 2) {
             compassLineLayer = L.polyline(compassPts, { color: '#10b981', weight: 4 }).addTo(croquisNorthMap);
             const p1 = compassPts[0], p2 = compassPts[1];
@@ -214,7 +237,10 @@ function initCroquisCompassMap() {
             let brng = Math.atan2(y, x) * 180 / Math.PI;
             brng = (brng + 360) % 360;
             const northTilt = Math.round((brng - 90 + 360) % 360);
-            document.getElementById('northAngleInput').value = northTilt;
+            
+            const nInput = document.getElementById('northAngleInput');
+            if(nInput) nInput.value = northTilt;
+            
             document.getElementById('compassMapStatus').innerText = `تم رصد اتجاه الشمال = ${northTilt}° بنجاح!`;
             updateCroquisAndSave();
         }
@@ -226,36 +252,41 @@ function resetCompassMiniMap() {
     compassMarkers.forEach(m => croquisNorthMap.removeLayer(m));
     compassMarkers = [];
     if (compassLineLayer) croquisNorthMap.removeLayer(compassLineLayer);
-    document.getElementById('compassMapStatus').innerText = 'انقر النقطة الأولى لبداية الضلع على الخريطة...';
+    const status = document.getElementById('compassMapStatus');
+    if(status) status.innerText = 'انقر النقطة الأولى لبداية الضلع على الخريطة...';
 }
 
-// ==================== لوحة الكروكي والخرطوشة والفرز الشرعي ====================
 function updateCroquisAndSave() {
-    const owner = document.getElementById('ownerName').value || 'غير محدد';
-    const surveyor = document.getElementById('surveyorName').value || 'م. أحمد سمير';
-    const location = document.getElementById('landLocation').value || '-';
-    const dateStr = document.getElementById('surveyDate').value || '-';
+    const owner = document.getElementById('ownerName')?.value || 'غير محدد';
+    const surveyor = document.getElementById('surveyorName')?.value || 'م. أحمد سمير';
+    const location = document.getElementById('landLocation')?.value || '-';
+    const dateStr = document.getElementById('surveyDate')?.value || '-';
 
-    const N = parseFloat(document.getElementById('cadNorth').value) || 0;
-    const S = parseFloat(document.getElementById('cadSouth').value) || 0;
-    const E = parseFloat(document.getElementById('cadEast').value) || 0;
-    const W = parseFloat(document.getElementById('cadWest').value) || 0;
-    const D = parseFloat(document.getElementById('cadDiag').value) || 0;
-    const northAngle = parseFloat(document.getElementById('northAngleInput').value) || 0;
+    const N = parseFloat(document.getElementById('cadNorth')?.value) || 0;
+    const S = parseFloat(document.getElementById('cadSouth')?.value) || 0;
+    const E = parseFloat(document.getElementById('cadEast')?.value) || 0;
+    const W = parseFloat(document.getElementById('cadWest')?.value) || 0;
+    const D = parseFloat(document.getElementById('cadDiag')?.value) || 0;
+    const northAngle = parseFloat(document.getElementById('northAngleInput')?.value) || 0;
 
-    const nbNorth = document.getElementById('neighborNorth').value || 'حد بحري';
-    const nbSouth = document.getElementById('neighborSouth').value || 'حد قبلي';
-    const nbEast = document.getElementById('neighborEast').value || 'حد شرقي';
-    const nbWest = document.getElementById('neighborWest').value || 'حد غربي';
+    const nbNorth = document.getElementById('neighborNorth')?.value || 'حد بحري';
+    const nbSouth = document.getElementById('neighborSouth')?.value || 'حد قبلي';
+    const nbEast = document.getElementById('neighborEast')?.value || 'حد شرقي';
+    const nbWest = document.getElementById('neighborWest')?.value || 'حد غربي';
 
-    const males = parseInt(document.getElementById('heirsMale').value) || 0;
-    const females = parseInt(document.getElementById('heirsFemale').value) || 0;
-    const splitDir = document.getElementById('splitDirection').value;
+    const males = parseInt(document.getElementById('heirsMale')?.value) || 0;
+    const females = parseInt(document.getElementById('heirsFemale')?.value) || 0;
+    const splitDir = document.getElementById('splitDirection')?.value || 'vertical';
 
     let totalArea = 0;
     if (D > 0) {
-        totalArea = calcHeron(N, W, D) + calcHeron(S, E, D);
+        // Heron
+        const s1 = (N + W + D)/2, s2 = (S + E + D)/2;
+        const a1 = Math.sqrt(Math.max(0, s1*(s1-N)*(s1-W)*(s1-D)));
+        const a2 = Math.sqrt(Math.max(0, s2*(s2-S)*(s2-E)*(s2-D)));
+        totalArea = a1 + a2;
     } else {
+        // Brahmagupta / Average
         const s = (N + S + E + W) / 2;
         const val = (s - N) * (s - S) * (s - E) * (s - W);
         totalArea = val > 0 ? Math.sqrt(val) : ((N + S) / 2) * ((E + W) / 2);
@@ -264,7 +295,8 @@ function updateCroquisAndSave() {
     const perimeter = N + S + E + W;
     const fqs = metersToFQS(totalArea);
 
-    document.getElementById('cadTotalAreaBadge').innerText = `المساحة: ${totalArea.toFixed(2)} م² (${fqs.text})`;
+    const badge = document.getElementById('cadTotalAreaBadge');
+    if(badge) badge.innerText = `المساحة: ${totalArea.toFixed(2)} م² (${fqs.text})`;
 
     const totalShares = (males * 2) + (females * 1);
     const singleShareRatio = totalShares > 0 ? (1 / totalShares) : 0;
@@ -288,6 +320,7 @@ function updateCroquisAndSave() {
 
 function drawFullSurveyCroquis(data) {
     const canvas = document.getElementById('croquisCanvas');
+    if(!canvas) return;
     const ctx = canvas.getContext('2d');
     const W_CANVAS = canvas.width, H_CANVAS = canvas.height;
     ctx.clearRect(0, 0, W_CANVAS, H_CANVAS);
@@ -390,6 +423,7 @@ function drawRotatedNorthArrow(ctx, x, y, angleDeg = 0) {
 
 function renderCroquisReport(data, males, females, totalShares) {
     const box = document.getElementById('cadShariaResults');
+    if(!box) return;
     let shariaNote = males === 1 && females === 1 ? `<p style="color:#10b981; font-weight:700;">تطبيق الشرع الإسلامي: الذكر (2/3) والأنثى (1/3).</p>` : '';
     let cardsHtml = '';
     data.parcels.forEach(p => {
@@ -400,6 +434,7 @@ function renderCroquisReport(data, males, females, totalShares) {
 
 function downloadCroquisImage() {
     const canvas = document.getElementById('croquisCanvas');
+    if(!canvas) return;
     const link = document.createElement('a');
     link.download = `كروكي_${lastCroquisData.owner || 'مساحي'}.png`;
     link.href = canvas.toDataURL('image/png');
@@ -417,76 +452,152 @@ function exportCroquisDXF() {
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Croquis_DXF.dxf`; a.click();
 }
 
-// ==================== أوتوكاد الذكي فائق الدقة (AutoCAD AI) ====================
-function generateAiCadPlan() {
-    const north = parseFloat(document.getElementById('aiNorth').value) || 12;
-    const south = parseFloat(document.getElementById('aiSouth').value) || 12;
-    const east = parseFloat(document.getElementById('aiEast').value) || 18;
-    const west = parseFloat(document.getElementById('aiWest').value) || 18;
+// ==================== زر الـ 3D للأوتوكاد الذكي ====================
+function toggleCad3D() {
+    is3DView = !is3DView;
+    const wrapper = document.getElementById('aiCanvasWrapper');
+    const btnSpan = document.querySelector('#btnToggle3D span') || document.querySelector('#btnToggle3D');
+    
+    if (is3DView) {
+        if(wrapper) wrapper.classList.add('cad-3d-mode');
+        if(btnSpan) btnSpan.innerText = "العودة للوضع 2D";
+    } else {
+        if(wrapper) wrapper.classList.remove('cad-3d-mode');
+        if(btnSpan) btnSpan.innerText = "تحويل إلى عرض 3D";
+    }
+}
 
-    const roomsCount = parseInt(document.getElementById('aiRooms').value) || 3;
-    const bathsCount = parseInt(document.getElementById('aiBaths').value) || 2;
-    const wallThick = parseFloat(document.getElementById('aiWallThickness').value) || 0.25;
-    const showAxes = document.getElementById('aiShowAxes').value === 'yes';
-    const stairPos = document.getElementById('aiStairPos').value;
-    const hasShaft = document.getElementById('aiShaft').value === 'yes';
+// ==================== الأوتوكاد الذكي فائق الدقة (أبعاد + أبواب + فرش) ====================
+function generateAiCadPlan() {
+    const north = parseFloat(document.getElementById('aiNorth')?.value) || 12;
+    const south = parseFloat(document.getElementById('aiSouth')?.value) || 12;
+    const east = parseFloat(document.getElementById('aiEast')?.value) || 18;
+    const west = parseFloat(document.getElementById('aiWest')?.value) || 18;
+
+    const roomsCount = parseInt(document.getElementById('aiRooms')?.value) || 3;
+    const bathsCount = parseInt(document.getElementById('aiBaths')?.value) || 2;
+    const stairPos = document.getElementById('aiStairPos') ? document.getElementById('aiStairPos').value : 'front';
+    const furnish = document.getElementById('aiFurnish') ? document.getElementById('aiFurnish').value === 'yes' : true;
 
     const avgWidth = (north + south) / 2, avgDepth = (east + west) / 2;
-    const totalArea = avgWidth * avgDepth, netArea = (avgWidth - wallThick * 2) * (avgDepth - wallThick * 2);
-
-    document.getElementById('aiCadSummaryBadge').innerText = `المساحة: ${totalArea.toFixed(1)} م² | الصافية: ${netArea.toFixed(1)} م²`;
+    const totalArea = avgWidth * avgDepth;
 
     const canvas = document.getElementById('aiCadCanvas');
+    if(!canvas) return;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#050b11'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    ctx.fillStyle = '#050b11'; 
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     const pad = 95;
     const scale = Math.min((canvas.width - pad * 2) / Math.max(north, south), (canvas.height - pad * 2) / Math.max(east, west));
-    const startX = (canvas.width - avgWidth * scale) / 2, startY = (canvas.height - avgDepth * scale) / 2;
-    const wallPx = Math.max(4, wallThick * scale);
+    const startX = (canvas.width - avgWidth * scale) / 2;
+    const startY = (canvas.height - avgDepth * scale) / 2;
+    const wallThick = 0.25, wallPx = wallThick * scale;
 
     lastAiPlanBoxes = [];
-    if (showAxes) {
-        [0, avgWidth * 0.32, avgWidth * 0.66, avgWidth].forEach((ax, i) => {
-            const sx = startX + ax * scale;
-            ctx.strokeStyle = 'rgba(244, 63, 94, 0.35)'; ctx.setLineDash([8, 4]); ctx.beginPath(); ctx.moveTo(sx, startY - 38); ctx.lineTo(sx, startY + avgDepth * scale + 20); ctx.stroke(); ctx.setLineDash([]);
-        });
+
+    function drawDimLine(x1, y1, x2, y2, text) {
+        ctx.strokeStyle = '#10b981'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x1-4, y1+4); ctx.lineTo(x1+4, y1-4); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x2-4, y2+4); ctx.lineTo(x2+4, y2-4); ctx.stroke();
+        ctx.fillStyle = '#10b981'; ctx.font = '12px Cairo'; ctx.textAlign = 'center';
+        ctx.fillText(text, (x1+x2)/2, y1 - 5);
     }
 
-    function drawPrecisionRoom(rx, ry, rw, rh, title, layerColor = '#22d3ee', isStair = false, isShaft = false) {
+    function drawFurniture(sx, sy, sw, sh, title) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 1.5;
+        const cx = sx + sw/2, cy = sy + sh/2;
+
+        if (title.includes('نوم')) {
+            const bedW = Math.min(sw * 0.4, 1.8 * scale);
+            const bedH = Math.min(sh * 0.5, 2.1 * scale);
+            ctx.fillStyle = 'rgba(34, 211, 238, 0.15)';
+            ctx.fillRect(cx - bedW/2, sy + wallPx, bedW, bedH);
+            ctx.strokeRect(cx - bedW/2, sy + wallPx, bedW, bedH);
+            ctx.strokeRect(cx - bedW/2 + 2, sy + wallPx + 2, bedW/2 - 4, 8);
+            ctx.strokeRect(cx + 2, sy + wallPx + 2, bedW/2 - 4, 8);
+        } else if (title.includes('مطبخ')) {
+            ctx.fillStyle = 'rgba(251, 191, 36, 0.15)';
+            ctx.fillRect(sx + wallPx, sy + wallPx, sw - wallPx*2, 18);
+            ctx.strokeRect(sx + wallPx, sy + wallPx, sw - wallPx*2, 18);
+            ctx.beginPath(); ctx.arc(sx + wallPx + 15, sy + wallPx + 9, 3, 0, Math.PI*2); ctx.stroke();
+            ctx.beginPath(); ctx.arc(sx + wallPx + 25, sy + wallPx + 9, 3, 0, Math.PI*2); ctx.stroke();
+            ctx.strokeRect(sx + sw - wallPx - 25, sy + wallPx + 2, 20, 14);
+        } else if (title.includes('حمام')) {
+            ctx.strokeRect(sx + wallPx, sy + wallPx, 25, Math.min(sh*0.6, 40));
+            ctx.beginPath(); ctx.arc(sx + sw - wallPx - 15, sy + sh - wallPx - 15, 7, 0, Math.PI*2); ctx.stroke();
+        } else if (title.includes('ريسبشن')) {
+            const sofaW = Math.min(sw * 0.5, 3 * scale);
+            ctx.fillStyle = 'rgba(16, 185, 129, 0.15)';
+            ctx.fillRect(cx - sofaW/2, sy + wallPx + 5, sofaW, 18); ctx.strokeRect(cx - sofaW/2, sy + wallPx + 5, sofaW, 18);
+            ctx.fillRect(cx - sofaW/2, sy + wallPx + 5, 18, sofaW*0.8); ctx.strokeRect(cx - sofaW/2, sy + wallPx + 5, 18, sofaW*0.8);
+            ctx.strokeRect(cx - 10, cy - 10, 20, 20);
+        }
+        ctx.restore();
+    }
+
+    function drawRoom(rx, ry, rw, rh, title) {
         const sx = startX + rx * scale, sy = startY + ry * scale, sw = rw * scale, sh = rh * scale;
         lastAiPlanBoxes.push({ rx, ry, rw, rh, title });
-        ctx.fillStyle = isShaft ? 'rgba(244,63,94,0.12)' : 'rgba(34,211,238,0.05)'; ctx.fillRect(sx, sy, sw, sh);
-        ctx.strokeStyle = layerColor; ctx.lineWidth = 2.4; ctx.strokeRect(sx, sy, sw, sh);
-        ctx.fillStyle = '#ffffff'; ctx.font = 'bold 12px Cairo'; ctx.textAlign = 'center'; ctx.fillText(title, sx + sw / 2, sy + sh / 2 - 4);
+        
+        ctx.fillStyle = 'rgba(34,211,238,0.04)'; ctx.fillRect(sx, sy, sw, sh);
+        ctx.strokeStyle = '#22d3ee'; ctx.lineWidth = 2; ctx.strokeRect(sx, sy, sw, sh);
+        ctx.strokeStyle = '#475569'; ctx.lineWidth = 1; ctx.strokeRect(sx + wallPx, sy + wallPx, sw - wallPx*2, sh - wallPx*2);
+
+        if (!title.includes('سلم')) {
+            const doorW = Math.min(24, sw * 0.2);
+            const dx = sx + wallPx + 5, dy = sy + sh - wallPx;
+            ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.moveTo(dx, dy); ctx.lineTo(dx, dy - doorW); ctx.stroke();
+            ctx.beginPath(); ctx.arc(dx, dy, doorW, -Math.PI/2, 0); ctx.stroke();
+        } else {
+            ctx.strokeStyle = '#fbbf24';
+            for (let s = 1; s < 7; s++) {
+                let stepY = sy + wallPx + s * ((sh - wallPx*2)/7);
+                ctx.beginPath(); ctx.moveTo(sx + wallPx + 5, stepY); ctx.lineTo(sx + sw - wallPx - 5, stepY); ctx.stroke();
+            }
+        }
+
+        if (furnish && !title.includes('سلم') && !title.includes('طرقة')) {
+            drawFurniture(sx, sy, sw, sh, title);
+        }
+
+        ctx.fillStyle = '#ffffff'; ctx.font = 'bold 13px Cairo'; ctx.textAlign = 'center';
+        ctx.fillText(title, sx + sw/2, sy + sh/2 - 2);
+        ctx.fillStyle = '#fbbf24'; ctx.font = '11px Arial';
+        ctx.fillText(`${(rw-wallThick*2).toFixed(1)}x${(rh-wallThick*2).toFixed(1)}m`, sx + sw/2, sy + sh/2 + 14);
     }
 
     const frontH = avgDepth * 0.38, midH = avgDepth * 0.24, backH = avgDepth * 0.38;
     const stairW = avgWidth * 0.28, recepW = avgWidth - stairW;
+
     if (stairPos === 'front') {
-        drawPrecisionRoom(0, 0, stairW, frontH * 0.82, 'سلم ومدخل', '#a855f7', true, false);
-        drawPrecisionRoom(stairW, 0, recepW, frontH, 'ريسبشن واستقبال', '#10b981');
+        drawRoom(0, 0, stairW, frontH * 0.8, 'سلم ومدخل');
+        drawRoom(stairW, 0, recepW, frontH, 'ريسبشن');
     } else {
-        drawPrecisionRoom(0, 0, avgWidth * 0.66, frontH, 'ريسبشن واستقبال', '#10b981');
-        drawPrecisionRoom(avgWidth * 0.66, 0, avgWidth * 0.34, frontH, 'مجلس', '#22d3ee');
+        drawRoom(0, 0, avgWidth, frontH, 'ريسبشن كبير');
     }
 
-    const serviceW = avgWidth * 0.40, hallW = avgWidth - serviceW;
-    drawPrecisionRoom(0, frontH, hallW, midH, 'صالة توزيع', '#94a3b8');
-    const kitchW = serviceW * 0.52, bathW = serviceW * 0.48;
-    drawPrecisionRoom(hallW, frontH, kitchW, midH, 'مطبخ', '#fbbf24');
-    drawPrecisionRoom(hallW + kitchW, frontH, bathW, midH, 'حمام', '#22d3ee');
+    const hallW = avgWidth * 0.6;
+    drawRoom(0, frontH, hallW, midH, 'طرقة');
+    drawRoom(hallW, frontH, (avgWidth - hallW)*0.55, midH, 'مطبخ');
+    drawRoom(hallW + (avgWidth - hallW)*0.55, frontH, (avgWidth - hallW)*0.45, midH, 'حمام');
 
     const roomW = avgWidth / roomsCount;
     for (let i = 0; i < roomsCount; i++) {
-        drawPrecisionRoom(i * roomW, frontH + midH, roomW, backH, `غرفة نوم (${i + 1})`, '#22d3ee');
+        drawRoom(i * roomW, frontH + midH, roomW, backH, `غرفة نوم ${i+1}`);
     }
 
-    document.getElementById('aiCadReport').innerHTML = `
-        <h3 style="color:#fbbf24; margin-bottom:8px;">التقرير الهندسي الدقيق — AutoCAD AI (م. أحمد سمير)</h3>
-        <p><b>الأبعاد:</b> شمالي ${north}م × جنوبي ${south}م × شرقي ${east}م × غربي ${west}م | <b>المساحة:</b> ${totalArea.toFixed(2)} م².</p>
-    `;
+    // الأبعاد الخارجية الشاملة
+    drawDimLine(startX, startY - 20, startX + avgWidth*scale, startY - 20, `واجهة ${north}m`);
+    drawDimLine(startX, startY + avgDepth*scale + 20, startX + avgWidth*scale, startY + avgDepth*scale + 20, `خلفي ${south}m`);
+    
+    const badge = document.getElementById('aiCadSummaryBadge');
+    if(badge) badge.innerText = `المساحة: ${totalArea.toFixed(1)} م²`;
 }
 
 function exportAiPlanDXF() {
@@ -499,7 +610,7 @@ function exportAiPlanDXF() {
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `AutoCAD_Precision.dxf`; a.click();
 }
 
-// المثلثات والخريطة والميزانية
+// ==================== أداة القياس بالمثلثات (طريقة هيرون) والإصلاح ====================
 function calcHeron(a, b, c) {
     if (a + b <= c || a + c <= b || b + c <= a) return 0;
     const s = (a + b + c) / 2;
@@ -507,9 +618,9 @@ function calcHeron(a, b, c) {
 }
 
 function addTriangle() {
-    const a = parseFloat(document.getElementById('triSideA').value) || 0;
-    const b = parseFloat(document.getElementById('triSideB').value) || 0;
-    const c = parseFloat(document.getElementById('triSideC').value) || 0;
+    const a = parseFloat(document.getElementById('triSideA')?.value) || 0;
+    const b = parseFloat(document.getElementById('triSideB')?.value) || 0;
+    const c = parseFloat(document.getElementById('triSideC')?.value) || 0;
     const area = calcHeron(a, b, c);
     if (area <= 0) { alert("مجموع أي ضلعين يجب أن يكون أكبر من الضلع الثالث!"); return; }
     trianglesList.push({ a, b, c, area });
@@ -520,19 +631,77 @@ function deleteTriangle(i) { trianglesList.splice(i, 1); saveStateToStorage(); r
 function clearTriangles() { trianglesList = []; saveStateToStorage(); renderTriangles(); }
 
 function renderTriangles() {
-    const tbody = document.getElementById('trianglesTableBody'); tbody.innerHTML = ''; let totalArea = 0;
+    const tbody = document.getElementById('trianglesTableBody'); 
+    if(!tbody) return;
+    tbody.innerHTML = ''; 
+    let totalArea = 0;
+
     trianglesList.forEach((t, i) => {
         totalArea += t.area;
         tbody.innerHTML += `<tr><td>مثلث (${i+1})</td><td>${t.a}</td><td>${t.b}</td><td>${t.c}</td><td><b>${t.area.toFixed(2)} م²</b></td><td><button class="btn-danger" style="padding:4px 8px" onclick="deleteTriangle(${i})"><i class="fa-solid fa-xmark"></i></button></td></tr>`;
     });
-    const fqs = metersToFQS(totalArea);
-    document.getElementById('triTotalSummary').innerHTML = `<h3 style="color:#22d3ee;">إجمالي المثلثات: ${totalArea.toFixed(2)} م²</h3><p style="color:#fbbf24; font-weight:700;">${fqs.text}</p>`;
+    
+    const summary = document.getElementById('triTotalSummary');
+    if(summary) summary.innerHTML = `<h3 style="color:#22d3ee;">إجمالي المثلثات: ${totalArea.toFixed(2)} م²</h3><p style="color:#fbbf24; font-weight:700;">${metersToFQS(totalArea).text}</p>`;
+
+    const lastTri = trianglesList[trianglesList.length - 1];
+    if (lastTri) {
+        drawSingleTriangle(lastTri.a, lastTri.b, lastTri.c);
+    } else {
+        // تفريغ الكانفاس في حالة عدم وجود مثلثات
+        const canvas = document.getElementById('triCanvas');
+        if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+    }
 }
 
+function drawSingleTriangle(a, b, c) {
+    const canvas = document.getElementById('triCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const s = (a + b + c) / 2;
+    const area = Math.sqrt(s * (s - a) * (s - b) * (s - c));
+    if (area <= 0 || isNaN(area)) return;
+
+    const cosA = (b * b + c * c - a * a) / (2 * b * c);
+    const sinA = Math.sqrt(Math.max(0, 1 - cosA * cosA));
+
+    const p1 = { x: 0, y: 0 };
+    const p2 = { x: c, y: 0 };
+    const p3 = { x: b * cosA, y: b * sinA };
+
+    const minX = Math.min(p1.x, p2.x, p3.x), maxX = Math.max(p1.x, p2.x, p3.x);
+    const minY = Math.min(p1.y, p2.y, p3.y), maxY = Math.max(p1.y, p2.y, p3.y);
+
+    const pad = 40;
+    const widthDiff = (maxX - minX) === 0 ? 1 : (maxX - minX);
+    const heightDiff = (maxY - minY) === 0 ? 1 : (maxY - minY);
+    const scale = Math.min((canvas.width - pad * 2) / widthDiff, (canvas.height - pad * 2) / heightDiff);
+
+    const toScreen = (pt) => ({
+        x: pad + (pt.x - minX) * scale + (canvas.width - widthDiff * scale)/2 - pad,
+        y: canvas.height - pad - (pt.y - minY) * scale - (canvas.height - heightDiff * scale)/2 + pad
+    });
+
+    const s1 = toScreen(p1), s2 = toScreen(p2), s3 = toScreen(p3);
+
+    ctx.beginPath(); ctx.moveTo(s1.x, s1.y); ctx.lineTo(s2.x, s2.y); ctx.lineTo(s3.x, s3.y); ctx.closePath();
+    ctx.fillStyle = 'rgba(16, 185, 129, 0.18)'; ctx.fill();
+    ctx.strokeStyle = '#10b981'; ctx.lineWidth = 3; ctx.stroke();
+
+    ctx.fillStyle = '#fbbf24'; ctx.font = 'bold 14px Cairo'; ctx.textAlign = 'center';
+    ctx.fillText(`ضلع C: ${c}م`, (s1.x + s2.x) / 2, (s1.y + s2.y) / 2 + 20);
+    ctx.fillText(`ضلع B: ${b}م`, (s1.x + s3.x) / 2 - 25, (s1.y + s3.y) / 2 - 10);
+    ctx.fillText(`ضلع A: ${a}م`, (s2.x + s3.x) / 2 + 25, (s2.y + s3.y) / 2 - 10);
+}
+
+// ==================== أداة الخريطة التفاعلية (Leaflet) ====================
 function initMapIfNeeded() {
     if (surveyMap) return;
     surveyMap = L.map('surveyMap').setView([28.1099, 30.7503], 15);
     L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains: ['mt0', 'mt1', 'mt2', 'mt3'] }).addTo(surveyMap);
+    
     surveyMap.on('click', (e) => {
         mapPoints.push([e.latlng.lat, e.latlng.lng]);
         mapMarkers.push(L.circleMarker(e.latlng, { radius: 6, color: '#fbbf24', fillOpacity: 1 }).addTo(surveyMap));
@@ -549,23 +718,56 @@ function updateMapPolygon() {
             area += (p2[1] * Math.PI / 180 - p1[1] * Math.PI / 180) * (2 + Math.sin(p1[0] * Math.PI / 180) + Math.sin(p2[0] * Math.PI / 180));
         }
         area = Math.abs(area * R * R / 2);
-        document.getElementById('mapAreaOutput').innerText = `المساحة: ${area.toFixed(2)} م² (${metersToFQS(area).text})`;
+        
+        const out = document.getElementById('mapAreaOutput');
+        if(out) out.innerText = `المساحة: ${area.toFixed(2)} م² (${metersToFQS(area).text})`;
+        
         mapPolygonLayer = L.polygon(mapPoints, { color: '#fbbf24', fillColor: '#10b981', fillOpacity: 0.3 }).addTo(surveyMap);
     }
 }
-function undoLastMapPoint() { if (mapPoints.length) { mapPoints.pop(); surveyMap.removeLayer(mapMarkers.pop()); updateMapPolygon(); } }
-function clearMapPolygon() { mapPoints = []; mapMarkers.forEach(m => surveyMap.removeLayer(m)); mapMarkers = []; if (mapPolygonLayer) surveyMap.removeLayer(mapPolygonLayer); document.getElementById('mapAreaOutput').innerText = 'تم مسح المضلع.'; }
 
+function undoLastMapPoint() { 
+    if (mapPoints.length) { 
+        mapPoints.pop(); 
+        surveyMap.removeLayer(mapMarkers.pop()); 
+        updateMapPolygon(); 
+    } 
+}
+
+function clearMapPolygon() { 
+    mapPoints = []; 
+    mapMarkers.forEach(m => surveyMap.removeLayer(m)); 
+    mapMarkers = []; 
+    if (mapPolygonLayer) surveyMap.removeLayer(mapPolygonLayer); 
+    const out = document.getElementById('mapAreaOutput');
+    if(out) out.innerText = 'تم مسح المضلع.'; 
+}
+
+// ==================== دفتر الميزانية الطولية ====================
 function addLevelRow() {
-    const bs = parseFloat(document.getElementById('lvlBS').value), is = parseFloat(document.getElementById('lvlIS').value), fs = parseFloat(document.getElementById('lvlFS').value);
+    const bs = parseFloat(document.getElementById('lvlBS')?.value);
+    const is = parseFloat(document.getElementById('lvlIS')?.value);
+    const fs = parseFloat(document.getElementById('lvlFS')?.value);
+    
     levelRows.push({ bs: isNaN(bs) ? null : bs, is: isNaN(is) ? null : is, fs: isNaN(fs) ? null : fs });
-    document.getElementById('lvlBS').value = ''; document.getElementById('lvlIS').value = ''; document.getElementById('lvlFS').value = '';
+    
+    if(document.getElementById('lvlBS')) document.getElementById('lvlBS').value = ''; 
+    if(document.getElementById('lvlIS')) document.getElementById('lvlIS').value = ''; 
+    if(document.getElementById('lvlFS')) document.getElementById('lvlFS').value = '';
+    
     saveStateToStorage(); recalcLeveling();
 }
+
 function resetLevelBook() { levelRows = []; saveStateToStorage(); recalcLeveling(); }
+
 function recalcLeveling() {
-    const tbody = document.getElementById('levelTableBody'); tbody.innerHTML = '';
-    let curRL = parseFloat(document.getElementById('bmLevel').value) || 10, curHI = null, sumBS = 0, sumFS = 0;
+    const tbody = document.getElementById('levelTableBody'); 
+    if(!tbody) return;
+    tbody.innerHTML = '';
+    
+    let curRL = parseFloat(document.getElementById('bmLevel')?.value) || 10;
+    let curHI = null, sumBS = 0, sumFS = 0;
+    
     levelRows.forEach((r, i) => {
         let rl = curRL;
         if (i === 0 && r.bs !== null) { curHI = curRL + r.bs; sumBS += r.bs; }
@@ -576,44 +778,108 @@ function recalcLeveling() {
         }
         tbody.innerHTML += `<tr><td>نقطة ${i+1}</td><td>${r.bs ?? '-'}</td><td>${r.is ?? '-'}</td><td>${r.fs ?? '-'}</td><td>${curHI?.toFixed(3) ?? '-'}</td><td><b>${rl.toFixed(3)}</b></td><td>رصدة</td></tr>`;
     });
-    document.getElementById('levelCheckSummary').innerHTML = `<b>التحقيق:</b> مجموع BS - FS = ${(sumBS - sumFS).toFixed(3)} م`;
+    
+    const chk = document.getElementById('levelCheckSummary');
+    if(chk) chk.innerHTML = `<b>التحقيق:</b> مجموع BS - FS = ${(sumBS - sumFS).toFixed(3)} م`;
 }
 
-function convertFromMeters() {
-    const m2 = parseFloat(document.getElementById('convMeters').value) || 0;
-    const fqs = metersToFQS(m2);
-    document.getElementById('convFeddan').value = fqs.feddan;
-    document.getElementById('convQirat').value = fqs.qirat;
-    document.getElementById('convSahm').value = fqs.sahm;
-    document.getElementById('convDetailedOutput').innerHTML = `<h3 style="color:#fbbf24">التحويل الفوري</h3><p><b>المتر المربع:</b> ${m2.toFixed(2)} م²</p><p><b>الوحدات:</b> ${fqs.text}</p>`;
+// ==================== حاسبة COGO (الانحرافات) ====================
+function calcCogo() {
+    const E1 = parseFloat(document.getElementById('cogoE1')?.value) || 0;
+    const N1 = parseFloat(document.getElementById('cogoN1')?.value) || 0;
+    const E2 = parseFloat(document.getElementById('cogoE2')?.value) || 0;
+    const N2 = parseFloat(document.getElementById('cogoN2')?.value) || 0;
+
+    const dE = E2 - E1;
+    const dN = N2 - N1;
+    const dist = Math.hypot(dE, dN);
+
+    let azimuth = Math.atan2(dE, dN) * (180 / Math.PI);
+    if (azimuth < 0) azimuth += 360;
+
+    const out = document.getElementById('cogoResults');
+    if(out) {
+        out.innerHTML = `
+            <h3 style="color:#f43f5e; margin-bottom:10px;">نتائج الانحراف (COGO)</h3>
+            <p><b>المسافة:</b> ${dist.toFixed(3)} م</p>
+            <p><b>الزاوية (Azimuth):</b> ${azimuth.toFixed(4)}°</p>
+        `;
+    }
 }
+
+// ==================== محول الوحدات المساحية الشامل ====================
+function convertFromMeters() {
+    const m2 = parseFloat(document.getElementById('convMeters')?.value) || 0;
+    const fqs = metersToFQS(m2);
+    if(document.getElementById('convFeddan')) document.getElementById('convFeddan').value = fqs.feddan;
+    if(document.getElementById('convQirat')) document.getElementById('convQirat').value = fqs.qirat;
+    if(document.getElementById('convSahm')) document.getElementById('convSahm').value = fqs.sahm;
+    
+    const out = document.getElementById('convDetailedOutput');
+    if(out) out.innerHTML = `<h3 style="color:#fbbf24">التحويل الفوري</h3><p><b>المتر المربع:</b> ${m2.toFixed(2)} م²</p><p><b>الوحدات:</b> ${fqs.text}</p>`;
+}
+
 function convertFromFQS() {
-    const f = parseFloat(document.getElementById('convFeddan').value) || 0, q = parseFloat(document.getElementById('convQirat').value) || 0, s = parseFloat(document.getElementById('convSahm').value) || 0;
+    const f = parseFloat(document.getElementById('convFeddan')?.value) || 0;
+    const q = parseFloat(document.getElementById('convQirat')?.value) || 0;
+    const s = parseFloat(document.getElementById('convSahm')?.value) || 0;
     const m2 = fqsToMeters(f, q, s);
-    document.getElementById('convMeters').value = m2.toFixed(2);
+    if(document.getElementById('convMeters')) document.getElementById('convMeters').value = m2.toFixed(2);
     convertFromMeters();
 }
 
+// ==================== الحفظ التلقائي Local Storage وتطبيق PWA ====================
 function saveStateToStorage() {
-    localStorage.setItem('ds_pro_v5', JSON.stringify({ trianglesList, levelRows }));
+    localStorage.setItem('ds_pro_v6', JSON.stringify({ trianglesList, levelRows }));
 }
+
 function loadSavedState() {
     const savedTheme = localStorage.getItem('ds_theme_pref');
     if (savedTheme) {
         document.documentElement.setAttribute('data-theme', savedTheme);
         const found = themesList.findIndex(t => t.id === savedTheme);
-        if (found !== -1) { currentThemeIdx = found; document.getElementById('themeNameLabel').innerText = themesList[found].name; }
+        if (found !== -1) { 
+            currentThemeIdx = found; 
+            const lbl = document.getElementById('themeNameLabel');
+            if(lbl) lbl.innerText = themesList[found].name; 
+        }
     }
-    const raw = localStorage.getItem('ds_pro_v5');
+    const raw = localStorage.getItem('ds_pro_v6');
     if (raw) {
-        try { const d = JSON.parse(raw); if (d.trianglesList) trianglesList = d.trianglesList; if (d.levelRows) levelRows = d.levelRows; } catch(e){}
-    } else { trianglesList = [{ a: 30, b: 40, c: 50, area: 600 }]; }
+        try { 
+            const d = JSON.parse(raw); 
+            if (d.trianglesList) trianglesList = d.trianglesList; 
+            if (d.levelRows) levelRows = d.levelRows; 
+        } catch(e){}
+    } else { 
+        trianglesList = [{ a: 30, b: 40, c: 50, area: 600 }]; 
+    }
 }
-function clearSavedData() { if (confirm("هل تريد مسح البيانات؟")) { localStorage.clear(); location.reload(); } }
+
+function clearSavedData() { 
+    if (confirm("هل تريد مسح البيانات وإعادة ضبط البرنامج؟")) { 
+        localStorage.clear(); 
+        location.reload(); 
+    } 
+}
 
 let deferredPrompt;
 function registerPWA() {
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
-    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; document.getElementById('installPwaBtn').style.display = 'inline-flex'; });
-    document.getElementById('installPwaBtn').addEventListener('click', async () => { if (!deferredPrompt) return; deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; });
+    window.addEventListener('beforeinstallprompt', (e) => { 
+        e.preventDefault(); 
+        deferredPrompt = e; 
+        const btn = document.getElementById('installPwaBtn');
+        if(btn) btn.style.display = 'inline-flex'; 
+    });
+    
+    const installBtn = document.getElementById('installPwaBtn');
+    if(installBtn) {
+        installBtn.addEventListener('click', async () => { 
+            if (!deferredPrompt) return; 
+            deferredPrompt.prompt(); 
+            await deferredPrompt.userChoice; 
+            deferredPrompt = null; 
+        });
+    }
 }
