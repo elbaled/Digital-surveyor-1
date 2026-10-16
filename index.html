@@ -3,16 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>المسّاح الرقمي | المنصة الهندسية المتكاملة</title>
-    <!-- إعدادات تطبيق الويب التقدمي PWA -->
+    <title>المسّاح الرقمي PRO | المنصة الهندسية والمساحية المتكاملة</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
-    <!-- الخطوط والأيقونات -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- مكتبة الخرائط Leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <!-- ملف التصميم الثابت -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -23,14 +19,14 @@
             <i class="fa-solid fa-compass-drafting"></i>
             <div>
                 <h1>المسّاح الرقمي <span>PRO</span></h1>
-                <small>المنصة الهندسية والمساحية المتكاملة</small>
+                <small>منصة الرفع المساحي، الكروكي المعتمد، والـ AutoCAD AI</small>
             </div>
         </div>
         <div class="nav-actions">
             <button id="installPwaBtn" class="btn-install" style="display: none;">
                 <i class="fa-solid fa-download"></i> تثبيت التطبيق
             </button>
-            <button class="btn-home" onclick="openTool('dashboard')" title="الرئيسية">
+            <button class="btn-home" onclick="openTool('dashboard')">
                 <i class="fa-solid fa-table-cells-large"></i> لوحة الأدوات
             </button>
             <button class="btn-clear" onclick="clearSavedData()" title="مسح البيانات المحفوظة">
@@ -44,147 +40,288 @@
         <!-- ================= الواجهة الرئيسية (الأيقونات) ================= -->
         <section id="view-dashboard" class="tool-view active">
             <div class="welcome-banner">
-                <h2>اختر الأداة الهندسية للبدء</h2>
-                <p>جميع حساباتك ورسوماتك يتم حفظها تلقائياً على جهازك لضمان عدم ضياع أي بيانات أثناء العمل الميداني أو المكتبي.</p>
+                <h2><i class="fa-solid fa-layer-group"></i> لوحة الأدوات الهندسية والمساحية</h2>
+                <p>اضغط على أي أداة لفتحها. الخريطة وجميع اللوحات مخفية تحت أيقوناتها لسرعة التصفح، ويتم حفظ جميع بياناتك تلقائياً.</p>
             </div>
 
             <div class="tools-grid">
-                <!-- 1. الكروكي والـ CAD وتقسيم المواريث -->
-                <div class="tool-card" onclick="openTool('cad')">
-                    <div class="card-icon cad-color"><i class="fa-solid fa-vector-square"></i></div>
-                    <h3>الرسم بالكاد والفرز الشرعي</h3>
-                    <p>رسم الأراضي بالأضلاع الأربعة (فوق، تحت، يمين، شمال)، تقسيم الورثة بالشرع (للذكر مثل حظ الأنثيين)، وتصدير DXF للأوتوكاد.</p>
-                    <span class="card-badge">4 أضلاع + DXF</span>
+                <!-- 1. لوحة الكروكي المساحي والجيران والفرز الشرعي -->
+                <div class="tool-card" onclick="openTool('croquis')">
+                    <div class="card-icon cad-color"><i class="fa-solid fa-file-signature"></i></div>
+                    <h3>لوحة الكروكي المساحي والفرز الشرعي</h3>
+                    <p>رسم الأرض بالأضلاع الأربعة، كتابة الجيران (الحدود الأربعة)، اسم المالك والمهندس المساح في الخرطوشة، وتقسيم الورثة بالشرع.</p>
+                    <span class="card-badge">خرطوشة + 4 أضلاع</span>
                 </div>
 
-                <!-- 2. القياس بالمثلثات -->
+                <!-- 2. الرسم بالكاد بمساعدة الذكاء الاصطناعي AutoCAD AI -->
+                <div class="tool-card" onclick="openTool('autocad-ai')">
+                    <div class="card-icon ai-color"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                    <h3>الرسم بالكاد بالذكاء الاصطناعي (AutoCAD AI)</h3>
+                    <p>تصميم وتقسيم المساقط المعمارية والأراضي بالأضلاع الأربعة (فوق، تحت، يمين، شمال) وتوزيع الغرف والمناور تلقائياً وتصدير DXF.</p>
+                    <span class="card-badge">AutoCAD AI</span>
+                </div>
+
+                <!-- 3. القياس بالمثلثات -->
                 <div class="tool-card" onclick="openTool('triangle')">
                     <div class="card-icon tri-color"><i class="fa-solid fa-shapes"></i></div>
                     <h3>القياس بطريقة المثلثات</h3>
-                    <p>حساب مساحات الأراضي غير المنتظمة بتقسيمها إلى مثلثات (طريقة هيرون) مع الرسم الكروكي وتحويل الفدان والقيراط والسهم.</p>
-                    <span class="card-badge">دقة حقلية</span>
+                    <p>رفع وحساب مساحات الأراضي غير المنتظمة بتقسيمها لمثلثات (طريقة هيرون) مع لوحة رسم المثلثات والفدان والقيراط والسهم.</p>
+                    <span class="card-badge">رفع بالمثلثات</span>
                 </div>
 
-                <!-- 3. الخريطة التفاعلية (مخفية تحت الأيقونة) -->
+                <!-- 4. الخريطة التفاعلية (مخفية تحت الأيقونة) -->
                 <div class="tool-card" onclick="openTool('map')">
                     <div class="card-icon map-color"><i class="fa-solid fa-map-location-dot"></i></div>
                     <h3>حساب المساحة بالخريطة</h3>
-                    <p>توقيع النقاط مباشرة على خريطة الأقمار الصناعية، حساب المساحة والمحيط لحظياً، واستخراج إحداثيات النقاط.</p>
-                    <span class="card-badge">أقمار صناعية</span>
+                    <p>الخريطة الفضائية لحساب المساحات والأطوال وتوقيع أركان الأرض مباشرة من الأقمار الصناعية.</p>
+                    <span class="card-badge">خريطة فضائية</span>
                 </div>
 
-                <!-- 4. الميزانية الطولية -->
+                <!-- 5. دفتر الميزانية الطولية -->
                 <div class="tool-card" onclick="openTool('leveling')">
                     <div class="card-icon lvl-color"><i class="fa-solid fa-ruler-combined"></i></div>
                     <h3>دفتر الميزانية الهندسية</h3>
-                    <p>حساب مناسيب النقاط بطريقة سطح الميزان (مؤخرة، متوسطة، مقدمة) مع التحقيق الحسابي التلقائي.</p>
+                    <p>حساب مناسيب النقاط (BS, IS, FS) ومنسوب سطح الميزان مع التحقيق الحسابي التلقائي.</p>
                     <span class="card-badge">ميزانية</span>
                 </div>
 
-                <!-- 5. حاسبة الانحرافات COGO -->
+                <!-- 6. حاسبة الانحرافات COGO -->
                 <div class="tool-card" onclick="openTool('cogo')">
                     <div class="card-icon cogo-color"><i class="fa-solid fa-location-crosshairs"></i></div>
                     <h3>حاسبة الإحداثيات والانحراف (COGO)</h3>
-                    <p>الحسابات المساحية العكسية والأمامية: حساب المسافة والانحراف الدائري والربعي بين نقطتين أو حساب إحداثي نقطة مجهولة.</p>
-                    <span class="card-badge">إحداثيات E,N</span>
+                    <p>حساب المسافة الأفقية والانحراف الدائري والربعي بين نقطتين بمعلومية الإحداثيات (E, N).</p>
+                    <span class="card-badge">COGO</span>
                 </div>
 
-                <!-- 6. محول الوحدات المساحية -->
+                <!-- 7. محول الوحدات المساحية -->
                 <div class="tool-card" onclick="openTool('converter')">
                     <div class="card-icon conv-color"><i class="fa-solid fa-scale-balanced"></i></div>
                     <h3>محول الوحدات المساحية</h3>
-                    <p>التحويل الفوري بين المتر المربع، الفدان، القيراط، السهم، الهكتار، والقصبة المساحية.</p>
+                    <p>التحويل الفوري بين المتر المربع، الفدان، القيراط، السهم، الهكتار، والقصبة.</p>
                     <span class="card-badge">فدان / قيراط / سهم</span>
                 </div>
             </div>
         </section>
 
-        <!-- ================= 1. أداة الرسم بالكاد (4 أضلاع) وتقسيم الورثة ================= -->
-        <section id="view-cad" class="tool-view">
+        <!-- ================= 1. لوحة الكروكي المساحي + الجيران + المالك + الفرز الشرعي ================= -->
+        <section id="view-croquis" class="tool-view">
             <div class="view-header">
-                <h2><i class="fa-solid fa-vector-square"></i> الرسم بالكاد (الأضلاع الأربعة) والفرز الشرعي للورثة</h2>
+                <h2><i class="fa-solid fa-file-signature"></i> لوحة الكروكي المساحي المعتمد والفرز الشرعي</h2>
                 <button class="btn-back" onclick="openTool('dashboard')"><i class="fa-solid fa-arrow-right"></i> رجوع للأدوات</button>
             </div>
 
             <div class="workspace-grid">
-                <!-- لوحة الإدخال -->
+                <!-- عمود الإدخال -->
                 <div class="control-panel">
+                    <!-- بيانات الملكية والمساح -->
                     <div class="panel-box">
-                        <h3>1. أطوال الأضلاع الأربعة (بالمتر)</h3>
-                        <div class="four-sides-grid">
+                        <h3>1. بيانات الملكية والمهندس المسّاح (الخرطوشة)</h3>
+                        <div class="two-cols">
                             <div class="input-group">
-                                <label>الضلع الشمالي (فوق)</label>
-                                <input type="number" id="cadNorth" step="0.01" value="40" oninput="updateCadAndSave()">
+                                <label>قطعة الأرض ملك السيد /</label>
+                                <input type="text" id="ownerName" value="الحاج محمد عبد القادر" oninput="updateCroquisAndSave()">
                             </div>
                             <div class="input-group">
-                                <label>الضلع الجنوبي (تحت)</label>
-                                <input type="number" id="cadSouth" step="0.01" value="40" oninput="updateCadAndSave()">
+                                <label>المهندس المسّاح القائم بالرفع /</label>
+                                <input type="text" id="surveyorName" value="م. أحمد سمير" oninput="updateCroquisAndSave()">
                             </div>
                             <div class="input-group">
-                                <label>الضلع الشرقي (يمين)</label>
-                                <input type="number" id="cadEast" step="0.01" value="25" oninput="updateCadAndSave()">
+                                <label>الموقع / الحوض / الزمام</label>
+                                <input type="text" id="landLocation" value="حوض الزهور - المنيا" oninput="updateCroquisAndSave()">
                             </div>
                             <div class="input-group">
-                                <label>الضلع الغربي (شمال)</label>
-                                <input type="number" id="cadWest" step="0.01" value="25" oninput="updateCadAndSave()">
+                                <label>تاريخ الرفع المساحي</label>
+                                <input type="text" id="surveyDate" value="أكتوبر 2026" oninput="updateCroquisAndSave()">
                             </div>
-                        </div>
-                        <div class="input-group" style="margin-top:10px;">
-                            <label>طول القطر (اختياري لزيادة الدقة - اتركه 0 للحساب التلقائي)</label>
-                            <input type="number" id="cadDiag" step="0.01" value="0" oninput="updateCadAndSave()">
                         </div>
                     </div>
 
+                    <!-- أطوال الأضلاع الأربعة -->
                     <div class="panel-box">
-                        <h3>2. تحديد الورثة (الشرع الإسلامي: للذكر مثل حظ الأنثيين)</h3>
-                        <p class="hint-text">الذكر يأخذ سهمين (2) والأنثى تأخذ سهماً واحداً (1) — أي النسبة $\frac{2}{3}$ للذكر و $\frac{1}{3}$ للأنثى عند انفرادهما.</p>
-                        <div class="two-cols">
+                        <h3>2. أطوال الأضلاع الأربعة للأرض (بالمتر)</h3>
+                        <div class="four-sides-grid">
                             <div class="input-group">
-                                <label>عدد الذكور (الأبناء/الإخوة)</label>
-                                <input type="number" id="heirsMale" min="0" value="1" oninput="updateCadAndSave()">
+                                <label>الضلع الشمالي / البحري (فوق)</label>
+                                <input type="number" id="cadNorth" step="0.01" value="40" oninput="updateCroquisAndSave()">
                             </div>
                             <div class="input-group">
-                                <label>عدد الإناث (البنات/الأخوات)</label>
-                                <input type="number" id="heirsFemale" min="0" value="1" oninput="updateCadAndSave()">
+                                <label>الضلع الجنوبي / القبلي (تحت)</label>
+                                <input type="number" id="cadSouth" step="0.01" value="40" oninput="updateCroquisAndSave()">
+                            </div>
+                            <div class="input-group">
+                                <label>الضلع الشرقي (يمين)</label>
+                                <input type="number" id="cadEast" step="0.01" value="25" oninput="updateCroquisAndSave()">
+                            </div>
+                            <div class="input-group">
+                                <label>الضلع الغربي (شمال)</label>
+                                <input type="number" id="cadWest" step="0.01" value="25" oninput="updateCroquisAndSave()">
                             </div>
                         </div>
                         <div class="input-group" style="margin-top:10px;">
-                            <label>اتجاه خطوط التقسيم على الكاد</label>
-                            <select id="splitDirection" onchange="updateCadAndSave()">
-                                <option value="vertical">تقسيم رأسي (خطوط من فوق لتحت على الواجهة)</option>
-                                <option value="horizontal">تقسيم أفقي (خطوط من اليمين للشمال)</option>
-                            </select>
+                            <label>طول القطر (اختياري لزيادة الدقة في الأراضي المنحرفة)</label>
+                            <input type="number" id="cadDiag" step="0.01" value="0" oninput="updateCroquisAndSave()">
+                        </div>
+                    </div>
+
+                    <!-- الجيران والحدود الأربعة -->
+                    <div class="panel-box">
+                        <h3>3. الحدود الأربعة (الجيران والشوارع)</h3>
+                        <div class="two-cols">
+                            <div class="input-group">
+                                <label>الحد البحري (فوق - شمالاً)</label>
+                                <input type="text" id="neighborNorth" value="شارع عمومي عرض 10 متر" oninput="updateCroquisAndSave()">
+                            </div>
+                            <div class="input-group">
+                                <label>الحد القبلي (تحت - جنوباً)</label>
+                                <input type="text" id="neighborSouth" value="ملك ورثة الشيخ حسن" oninput="updateCroquisAndSave()">
+                            </div>
+                            <div class="input-group">
+                                <label>الحد الشرقي (يمين - شرقاً)</label>
+                                <input type="text" id="neighborEast" value="جار: محمود علي" oninput="updateCroquisAndSave()">
+                            </div>
+                            <div class="input-group">
+                                <label>الحد الغربي (شمال - غرباً)</label>
+                                <input type="text" id="neighborWest" value="مسقى خاص ثم جار" oninput="updateCroquisAndSave()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- تقسيم المواريث الشرعي -->
+                    <div class="panel-box">
+                        <h3>4. تقسيم الورثة بالشرع الإسلامي (للذكر مثل حظ الأنثيين)</h3>
+                        <p class="hint-text">الذكر له سهمان (الثلثان $\frac{2}{3}$ عند وجود ذكر وأنثى) والأنثى لها سهم واحد (الثلث $\frac{1}{3}$). ضع 0 لإلغاء التقسيم.</p>
+                        <div class="three-cols">
+                            <div class="input-group">
+                                <label>عدد الذكور</label>
+                                <input type="number" id="heirsMale" min="0" value="1" oninput="updateCroquisAndSave()">
+                            </div>
+                            <div class="input-group">
+                                <label>عدد الإناث</label>
+                                <input type="number" id="heirsFemale" min="0" value="1" oninput="updateCroquisAndSave()">
+                            </div>
+                            <div class="input-group">
+                                <label>اتجاه الفرز</label>
+                                <select id="splitDirection" onchange="updateCroquisAndSave()">
+                                    <option value="vertical">طولي (على الواجهة)</option>
+                                    <option value="horizontal">عرضي (أفقي)</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
                     <div class="action-buttons">
-                        <button class="btn-primary" onclick="updateCadAndSave()">
-                            <i class="fa-solid fa-calculator"></i> تحديث الرسم والحساب
+                        <button class="btn-primary" onclick="downloadCroquisImage()">
+                            <i class="fa-solid fa-image"></i> حفظ لوحة الكروكي كصورة
                         </button>
-                        <button class="btn-success" onclick="exportToDXF()">
-                            <i class="fa-solid fa-file-export"></i> تصدير ملف أوتوكاد (DXF)
+                        <button class="btn-success" onclick="exportCroquisDXF()">
+                            <i class="fa-solid fa-file-export"></i> تصدير أوتوكاد (DXF)
                         </button>
                     </div>
                 </div>
 
-                <!-- لوحة الكاد والنتائج -->
+                <!-- عمود لوحة الرسم المساحي والخرطوشة -->
                 <div class="display-panel">
                     <div class="cad-canvas-wrapper">
                         <div class="cad-toolbar">
-                            <span><i class="fa-solid fa-compass"></i> اتجاه الشمال للأعلى</span>
+                            <span><i class="fa-solid fa-drafting-compass"></i> لوحة الكروكي المساحي والخرطوشة الهندسية</span>
                             <span id="cadTotalAreaBadge">المساحة: 0 م²</span>
                         </div>
-                        <canvas id="cadCanvas" width="750" height="460"></canvas>
+                        <canvas id="croquisCanvas" width="820" height="620"></canvas>
                     </div>
 
-                    <div class="results-box" id="cadShariaResults">
-                        <!-- يتم ملؤها بالجافاسكريبت -->
-                    </div>
+                    <div class="results-box" id="cadShariaResults"></div>
                 </div>
             </div>
         </section>
 
-        <!-- ================= 2. أداة القياس بالمثلثات ================= -->
+        <!-- ================= 2. أداة الرسم بالكاد بمساعدة الذكاء الاصطناعي (AutoCAD AI) ================= -->
+        <section id="view-autocad-ai" class="tool-view">
+            <div class="view-header">
+                <h2><i class="fa-solid fa-wand-magic-sparkles"></i> الرسم بالكاد بمساعدة الذكاء الاصطناعي (AutoCAD AI)</h2>
+                <button class="btn-back" onclick="openTool('dashboard')"><i class="fa-solid fa-arrow-right"></i> رجوع للأدوات</button>
+            </div>
+
+            <div class="workspace-grid">
+                <div class="control-panel">
+                    <div class="panel-box">
+                        <h3>1. الأضلاع الأربعة لقطعة الأرض المعمارية (بالمتر)</h3>
+                        <p class="hint-text">يرسم الكاد الذكي الأضلاع الأربعة كاملة (فوق، تحت، يمين، شمال) ويوزع المسقط المعماري بداخلها:</p>
+                        <div class="four-sides-grid">
+                            <div class="input-group">
+                                <label>الضلع العلوي (فوق - الواجهة)</label>
+                                <input type="number" id="aiNorth" step="0.1" value="12" oninput="generateAiCadPlan()">
+                            </div>
+                            <div class="input-group">
+                                <label>الضلع السفلي (تحت - الخلفي)</label>
+                                <input type="number" id="aiSouth" step="0.1" value="12" oninput="generateAiCadPlan()">
+                            </div>
+                            <div class="input-group">
+                                <label>الضلع الأيمن (يمين)</label>
+                                <input type="number" id="aiEast" step="0.1" value="20" oninput="generateAiCadPlan()">
+                            </div>
+                            <div class="input-group">
+                                <label>الضلع الأيسر (شمال)</label>
+                                <input type="number" id="aiWest" step="0.1" value="20" oninput="generateAiCadPlan()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel-box">
+                        <h3>2. متطلبات التصميم الذكي (أوامر الـ AI)</h3>
+                        <div class="two-cols">
+                            <div class="input-group">
+                                <label>عدد غرف النوم</label>
+                                <input type="number" id="aiRooms" min="1" max="8" value="3" oninput="generateAiCadPlan()">
+                            </div>
+                            <div class="input-group">
+                                <label>عدد الحمامات</label>
+                                <input type="number" id="aiBaths" min="1" max="4" value="2" oninput="generateAiCadPlan()">
+                            </div>
+                            <div class="input-group">
+                                <label>موقع السلم والمدخل</label>
+                                <select id="aiStairPos" onchange="generateAiCadPlan()">
+                                    <option value="front">في الواجهة الأمامية</option>
+                                    <option value="center">في منتصف المبنى</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>ارتداد / منور</label>
+                                <select id="aiShaft" onchange="generateAiCadPlan()">
+                                    <option value="yes">إضافة منور تهوية وتخديم</option>
+                                    <option value="no">بدون منور (واجهة مفتوحة)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="input-group" style="margin-top:12px;">
+                            <label>أمر نصي للمساعد الذكي (اختياري - مثال: صالة كبيرة، مطبخ أمريكي...)</label>
+                            <input type="text" id="aiPromptText" placeholder="اكتب طلبك مثل: ريسبشن قطعتين على الواجهة و 3 غرف خلفية..." oninput="generateAiCadPlan()">
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn-primary" onclick="generateAiCadPlan()">
+                            <i class="fa-solid fa-robot"></i> توليد المسقط بالـ AI
+                        </button>
+                        <button class="btn-success" onclick="exportAiPlanDXF()">
+                            <i class="fa-solid fa-file-export"></i> تحميل ملف أوتوكاد (DXF)
+                        </button>
+                    </div>
+                </div>
+
+                <div class="display-panel">
+                    <div class="cad-canvas-wrapper">
+                        <div class="cad-toolbar">
+                            <span><i class="fa-solid fa-microchip"></i> AutoCAD AI Blueprint — الأضلاع الأربعة والتقسيم المعماري</span>
+                            <span id="aiCadSummaryBadge">المساحة: 240 م²</span>
+                        </div>
+                        <canvas id="aiCadCanvas" width="820" height="560"></canvas>
+                    </div>
+                    <div class="results-box" id="aiCadReport"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= 3. أداة القياس بالمثلثات ================= -->
         <section id="view-triangle" class="tool-view">
             <div class="view-header">
                 <h2><i class="fa-solid fa-shapes"></i> حساب المساحات بطريقة المثلثات (طريقة هيرون)</h2>
@@ -195,7 +332,6 @@
                 <div class="control-panel">
                     <div class="panel-box">
                         <h3>إضافة مثلث جديد للرفعة المساحية</h3>
-                        <p class="hint-text">أدخل أطوال الأضلاع الثلاثة للمثلث المقاس على الطبيعة بالمتر:</p>
                         <div class="three-cols">
                             <div class="input-group">
                                 <label>الضلع الأول (A)</label>
@@ -243,17 +379,17 @@
                 <div class="display-panel">
                     <div class="cad-canvas-wrapper">
                         <div class="cad-toolbar">
-                            <span>معاينة كروكي المثلث الأخير</span>
-                            <span id="triAnglesInfo">الزوايا الداخلية</span>
+                            <span>لوحة رسم المثلث المساحي بالأبعاد</span>
+                            <span>طريقة هيرون الهندسية</span>
                         </div>
-                        <canvas id="triCanvas" width="650" height="340"></canvas>
+                        <canvas id="triCanvas" width="650" height="360"></canvas>
                     </div>
                     <div class="results-box" id="triTotalSummary"></div>
                 </div>
             </div>
         </section>
 
-        <!-- ================= 3. أداة الخريطة التفاعلية ================= -->
+        <!-- ================= 4. أداة الخريطة التفاعلية ================= -->
         <section id="view-map" class="tool-view">
             <div class="view-header">
                 <h2><i class="fa-solid fa-map-location-dot"></i> حساب المساحة والأطوال بالخريطة التفاعلية</h2>
@@ -269,7 +405,7 @@
             <div id="surveyMap" class="map-container"></div>
         </section>
 
-        <!-- ================= 4. دفتر الميزانية الطولية ================= -->
+        <!-- ================= 5. دفتر الميزانية الطولية ================= -->
         <section id="view-leveling" class="tool-view">
             <div class="view-header">
                 <h2><i class="fa-solid fa-ruler-combined"></i> دفتر الميزانية الطولية (طريقة سطح الميزان)</h2>
@@ -320,7 +456,7 @@
             </div>
         </section>
 
-        <!-- ================= 5. حاسبة الانحرافات والإحداثيات COGO ================= -->
+        <!-- ================= 6. حاسبة الانحرافات والإحداثيات COGO ================= -->
         <section id="view-cogo" class="tool-view">
             <div class="view-header">
                 <h2><i class="fa-solid fa-location-crosshairs"></i> حاسبة الإحداثيات والانحرافات (COGO)</h2>
@@ -353,7 +489,7 @@
             </div>
         </section>
 
-        <!-- ================= 6. محول الوحدات المساحية ================= -->
+        <!-- ================= 7. محول الوحدات المساحية ================= -->
         <section id="view-converter" class="tool-view">
             <div class="view-header">
                 <h2><i class="fa-solid fa-scale-balanced"></i> محول الوحدات المساحية المصرية</h2>
@@ -389,7 +525,6 @@
 
     </main>
 
-    <!-- مكتبة الخرائط والملف البرمجي -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="script.js"></script>
 </body>
