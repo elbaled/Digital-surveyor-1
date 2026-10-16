@@ -1,7 +1,6 @@
 :root {
     --bg-dark: #0f172a;
     --bg-card: #1e293b;
-    --bg-panel: #162032;
     --accent: #f59e0b;
     --accent-hover: #d97706;
     --blue: #38bdf8;
@@ -26,9 +25,8 @@ body {
     overflow-x: hidden;
 }
 
-/* الشريط العلوي */
 .top-navbar {
-    background: rgba(30, 41, 59, 0.95);
+    background: rgba(30, 41, 59, 0.96);
     border-bottom: 2px solid var(--accent);
     padding: 12px 24px;
     display: flex;
@@ -55,7 +53,6 @@ body {
 .brand h1 {
     font-size: 1.35rem;
     font-weight: 800;
-    line-height: 1.2;
 }
 
 .brand h1 span {
@@ -91,17 +88,15 @@ body {
 
 .btn-home { background: #334155; color: #fff; }
 .btn-home:hover { background: var(--accent); color: #000; }
-
 .btn-install { background: var(--green); color: #fff; }
 .btn-clear { background: #334155; color: var(--red); }
 .btn-back { background: #334155; color: #fff; }
 .btn-back:hover { background: var(--blue); color: #000; }
 
-/* الحاوية الرئيسية والتبديل بين الأدوات */
 .main-container {
-    max-width: 1380px;
+    max-width: 1420px;
     margin: 0 auto;
-    padding: 24px;
+    padding: 22px;
 }
 
 .tool-view {
@@ -118,14 +113,13 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* بانر الترحيب وشبكة الأيقونات */
 .welcome-banner {
     background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
     border: 1px solid var(--border-color);
     border-right: 5px solid var(--accent);
-    padding: 22px;
+    padding: 20px;
     border-radius: 14px;
-    margin-bottom: 26px;
+    margin-bottom: 24px;
 }
 
 .welcome-banner h2 {
@@ -139,40 +133,41 @@ body {
 
 .tools-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 22px;
+    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+    gap: 20px;
 }
 
 .tool-card {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: 16px;
-    padding: 24px;
+    padding: 22px;
     cursor: pointer;
     position: relative;
     transition: all 0.25s ease;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
 }
 
 .tool-card:hover {
     transform: translateY(-6px);
     border-color: var(--accent);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
 }
 
 .card-icon {
-    width: 60px;
-    height: 60px;
+    width: 58px;
+    height: 58px;
     border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.8rem;
+    font-size: 1.75rem;
 }
 
 .cad-color { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+.ai-color { background: rgba(6, 182, 212, 0.18); color: #06b6d4; }
 .tri-color { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
 .map-color { background: rgba(16, 185, 129, 0.15); color: #10b981; }
 .lvl-color { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
@@ -180,20 +175,20 @@ body {
 .conv-color { background: rgba(234, 179, 8, 0.15); color: #eab308; }
 
 .tool-card h3 {
-    font-size: 1.2rem;
+    font-size: 1.15rem;
     color: #fff;
 }
 
 .tool-card p {
     color: var(--text-muted);
-    font-size: 0.92rem;
+    font-size: 0.9rem;
     line-height: 1.6;
 }
 
 .card-badge {
     position: absolute;
-    top: 20px;
-    left: 20px;
+    top: 18px;
+    left: 18px;
     background: #0f172a;
     color: var(--accent);
     border: 1px solid var(--border-color);
@@ -203,32 +198,30 @@ body {
     font-weight: 700;
 }
 
-/* ترويسة الأداة الداخلية */
 .view-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 18px;
     padding-bottom: 12px;
     border-bottom: 1px solid var(--border-color);
 }
 
 .view-header h2 {
-    font-size: 1.35rem;
+    font-size: 1.3rem;
     color: var(--accent);
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
-/* تقسيم مساحات العمل */
 .workspace-grid {
     display: grid;
-    grid-template-columns: 1fr 1.25fr;
-    gap: 22px;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 20px;
 }
 
-@media (max-width: 992px) {
+@media (max-width: 1024px) {
     .workspace-grid {
         grid-template-columns: 1fr;
     }
@@ -238,28 +231,28 @@ body {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: 14px;
-    padding: 20px;
-    margin-bottom: 18px;
+    padding: 18px;
+    margin-bottom: 16px;
 }
 
 .panel-box h3 {
-    font-size: 1.05rem;
+    font-size: 1rem;
     color: var(--blue);
-    margin-bottom: 14px;
+    margin-bottom: 12px;
     border-right: 3px solid var(--blue);
     padding-right: 10px;
 }
 
 .hint-text {
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     color: var(--text-muted);
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
 
 .four-sides-grid, .two-cols {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    gap: 10px;
 }
 
 .three-cols {
@@ -271,11 +264,11 @@ body {
 .input-group {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 5px;
 }
 
 .input-group label {
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     color: #cbd5e1;
     font-weight: 600;
 }
@@ -284,9 +277,9 @@ body {
     background: #0f172a;
     border: 1px solid var(--border-color);
     color: #fff;
-    padding: 10px 12px;
+    padding: 9px 11px;
     border-radius: 8px;
-    font-size: 0.95rem;
+    font-size: 0.92rem;
 }
 
 .input-group input:focus, .input-group select:focus {
@@ -302,7 +295,7 @@ body {
 
 .btn-primary, .btn-success, .btn-danger {
     border: none;
-    padding: 11px 18px;
+    padding: 11px 16px;
     border-radius: 8px;
     font-weight: 700;
     cursor: pointer;
@@ -316,22 +309,20 @@ body {
 
 .btn-primary { background: var(--accent); color: #000; }
 .btn-primary:hover { background: var(--accent-hover); }
-
 .btn-success { background: var(--green); color: #fff; }
 .btn-danger { background: var(--red); color: #fff; }
 
-/* شاشة الكاد */
 .cad-canvas-wrapper {
-    background: #090d16;
+    background: #070b12;
     border: 2px solid var(--border-color);
     border-radius: 14px;
     overflow: hidden;
-    margin-bottom: 18px;
+    margin-bottom: 16px;
 }
 
 .cad-toolbar {
     background: #111827;
-    padding: 8px 16px;
+    padding: 9px 16px;
     display: flex;
     justify-content: space-between;
     font-size: 0.85rem;
@@ -345,29 +336,22 @@ canvas {
     display: block;
 }
 
-/* الجداول */
-.table-responsive {
-    overflow-x: auto;
-}
-
+.table-responsive { overflow-x: auto; }
 .data-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
 }
-
 .data-table th, .data-table td {
-    padding: 10px;
+    padding: 9px;
     border: 1px solid var(--border-color);
     text-align: center;
 }
-
 .data-table th {
     background: #0f172a;
     color: var(--accent);
 }
 
-/* الخريطة */
 .map-controls-bar {
     display: flex;
     gap: 12px;
@@ -393,11 +377,10 @@ canvas {
     border: 2px solid var(--border-color);
 }
 
-/* بطاقات نتائج المواريث */
 .sharia-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
     margin-top: 12px;
 }
 
@@ -405,6 +388,6 @@ canvas {
     background: #0f172a;
     border: 1px solid var(--border-color);
     border-right: 4px solid var(--accent);
-    padding: 12px;
+    padding: 11px;
     border-radius: 10px;
 }
