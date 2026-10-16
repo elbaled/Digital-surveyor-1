@@ -4,14 +4,14 @@
   "description": "المنصة الهندسية والمساحية المتكاملة للرسم بالكاد وحساب المساحات والفرز الشرعي",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#0f172a",
+  "background_color": "#061318",
+  "theme_color": "#10b981",
   "orientation": "any",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/2622/2622238.png",
+      "src": "icon.svg",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/svg+xml"
     }
   ]
 }
