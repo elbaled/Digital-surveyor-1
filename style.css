@@ -293,3 +293,47 @@ canvas { width: 100%; height: auto; display: block; }
 .footer-center { display: flex; align-items: center; gap: 12px; }
 .footer-engineer b { color: var(--accent-sec); font-size: 0.95rem; }
 .footer-beta-badge { background: rgba(16, 185, 129, 0.15); color: var(--accent); border: 1px solid var(--accent); padding: 2px 10px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; }
+
+/* ================= تأثير الـ 3D المذهل للأوتوكاد ================= */
+.cad-3d-mode {
+    transform-style: preserve-3d;
+    transform: perspective(1400px) rotateX(55deg) rotateZ(-35deg) scale(0.85);
+    box-shadow: 30px 30px 60px rgba(0, 0, 0, 0.6), -5px -5px 15px rgba(255, 255, 255, 0.05);
+    border: 4px solid var(--accent) !important;
+    border-bottom: 12px solid #042f2e !important;
+    border-right: 12px solid #134e4a !important;
+    border-radius: 12px;
+    transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.6s ease;
+    background: #020617;
+}
+
+#aiCanvasWrapper {
+    transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.6s ease;
+}
+
+/* ================= تجاوب كامل مع الموبايل (Mobile Responsiveness) ================= */
+@media (max-width: 992px) {
+    .workspace-grid {
+        grid-template-columns: 1fr; /* تحويل العرض لعمود واحد في الموبايل */
+    }
+    .top-navbar {
+        flex-direction: column;
+        gap: 15px;
+    }
+    .nav-actions {
+        width: 100%;
+        justify-content: center;
+    }
+    .four-sides-grid, .three-cols, .two-cols {
+        grid-template-columns: 1fr; /* كل المدخلات تحت بعض في الموبايل */
+    }
+    .cad-canvas-wrapper canvas {
+        width: 100%;
+        height: auto;
+    }
+    .btn-theme, .btn-home, .btn-install {
+        flex: 1;
+        justify-content: center;
+        font-size: 0.85rem;
+    }
+}
