@@ -4,12 +4,27 @@ let mapPoints = [];
 let mapPolygonLayer = null;
 let mapMarkers = [];
 
+// خريطة تحديد اتجاه الشمال الاختيارية داخل الكروكي
+let croquisNorthMap = null;
+let compassPts = [];
+let compassLineLayer = null;
+let compassMarkers = [];
+
 let trianglesList = [];
 let levelRows = [];
 let lastCroquisData = {};
 let lastAiPlanBoxes = [];
 
+const themesList = [
+    { id: 'emerald', name: 'ثيم الزمرد' },
+    { id: 'royal', name: 'ثيم الكاد الذهبي' },
+    { id: 'daylight', name: 'الوضع النهاري' }
+];
+let currentThemeIdx = 0;
+
+// ==================== تشغيل الموقع والإنترو ====================
 window.addEventListener('DOMContentLoaded', () => {
+    runSplashIntro();
     loadSavedState();
     updateCroquisAndSave();
     generateAiCadPlan();
@@ -20,7 +35,45 @@ window.addEventListener('DOMContentLoaded', () => {
     registerPWA();
 });
 
-// ==================== التنقل بين الأيقونات وإخفاء الخريطة ====================
+function runSplashIntro() {
+    const bar = document.getElementById('introProgress');
+    const status = document.getElementById('introStatusText');
+    let progress = 0;
+    const steps = [
+        "جاري تهيئة محرك الرسم الهندسي (AutoCAD AI)...",
+        "جاري تحميل خرائط الأقمار الصناعية وبوصلة الشمال...",
+        "تجهيز أدوات الفرز الشرعي للمواريث — م. أحمد سمير...",
+        "اكتمل التحميل — النسخة التجريبية جاهزة!"
+    ];
+
+    const interval = setInterval(() => {
+        progress += 25;
+        if (bar) bar.style.width = `${Math.min(progress, 100)}%`;
+        if (status && steps[Math.floor(progress / 30)]) {
+            status.innerText = steps[Math.floor(progress / 30)];
+        }
+        if (progress >= 100) {
+            clearInterval(interval);
+            setTimeout(closeIntroSplash, 600);
+        }
+    }, 450);
+}
+
+function closeIntroSplash() {
+    const splash = document.getElementById('splashIntro');
+    if (splash) splash.classList.add('hidden');
+}
+
+// ==================== تغيير ألوان الموقع (Themes) ====================
+function cycleTheme() {
+    currentThemeIdx = (currentThemeIdx + 1) % themesList.length;
+    const selected = themesList[currentThemeIdx];
+    document.documentElement.setAttribute('data-theme', selected.id);
+    document.getElementById('themeNameLabel').innerText = selected.name;
+    localStorage.setItem('ds_theme_pref', selected.id);
+}
+
+// ==================== التنقل بين الأيقونات ====================
 function openTool(toolName) {
     document.querySelectorAll('.tool-view').forEach(sec => sec.classList.remove('active'));
     const target = document.getElementById(`view-${toolName}`);
@@ -57,10 +110,73 @@ function metersToFQS(areaM2) {
     };
 }
 
+// ==================== خريطة تحديد اتجاه الشمال الاختيارية داخل الكروكي ====================
+function toggleCroquisCompassMap() {
+    const box = document.getElementById('croquisMiniMapBox');
+    if (box.style.display === 'none') {
+        box.style.display = 'block';
+        setTimeout(() => {
+            initCroquisCompassMap();
+            croquisNorthMap.invalidateSize();
+        }, 150);
+    } else {
+        box.style.display = 'none';
+    }
+}
+
+function initCroquisCompassMap() {
+    if (croquisNorthMap) return;
+    croquisNorthMap = L.map('croquisNorthMap').setView([28.1099, 30.7503], 16);
+
+    L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
+    }).addTo(croquisNorthMap);
+
+    croquisNorthMap.on('click', (e) => {
+        if (compassPts.length >= 2) resetCompassMiniMap();
+        compassPts.push(e.latlng);
+        const m = L.circleMarker(e.latlng, { radius: 6, color: '#fbbf24', fillOpacity: 1 }).addTo(croquisNorthMap);
+        compassMarkers.push(m);
+
+        if (compassPts.length === 1) {
+            document.getElementById('compassMapStatus').innerText = 'تم تحديد النقطة (1) — اضغط الآن على النقطة (2) لنهاية الضلع البحري...';
+        } else if (compassPts.length === 2) {
+            compassLineLayer = L.polyline(compassPts, { color: '#10b981', weight: 4 }).addTo(croquisNorthMap);
+            // حساب انحراف الضلع واستنتاج اتجاه الشمال الحقيقي بالنسبة للوحة الكروكي
+            const p1 = compassPts[0];
+            const p2 = compassPts[1];
+            const dLon = (p2.lng - p1.lng) * Math.PI / 180;
+            const lat1 = p1.lat * Math.PI / 180;
+            const lat2 = p2.lat * Math.PI / 180;
+
+            const y = Math.sin(dLon) * Math.cos(lat2);
+            const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+            let brng = Math.atan2(y, x) * 180 / Math.PI;
+            brng = (brng + 360) % 360;
+
+            // زاوية دوران سهم الشمال على اللوحة
+            const northTilt = Math.round((brng - 90 + 360) % 360);
+            document.getElementById('northAngleInput').value = northTilt;
+            document.getElementById('compassMapStatus').innerText =
+                `تم رصد اتجاه الشمال من الخريطة بنجاح! زاوية الشمال = ${northTilt}°`;
+            updateCroquisAndSave();
+        }
+    });
+}
+
+function resetCompassMiniMap() {
+    compassPts = [];
+    compassMarkers.forEach(m => croquisNorthMap.removeLayer(m));
+    compassMarkers = [];
+    if (compassLineLayer) croquisNorthMap.removeLayer(compassLineLayer);
+    document.getElementById('compassMapStatus').innerText = 'انقر النقطة الأولى لبداية الضلع على الخريطة...';
+}
+
 // ==================== 1. لوحة الكروكي المساحي + الجيران + المالك + الفرز الشرعي ====================
 function updateCroquisAndSave() {
     const owner = document.getElementById('ownerName').value || 'غير محدد';
-    const surveyor = document.getElementById('surveyorName').value || 'غير محدد';
+    const surveyor = document.getElementById('surveyorName').value || 'م. أحمد سمير';
     const location = document.getElementById('landLocation').value || '-';
     const dateStr = document.getElementById('surveyDate').value || '-';
 
@@ -69,6 +185,7 @@ function updateCroquisAndSave() {
     const E = parseFloat(document.getElementById('cadEast').value) || 0;
     const W = parseFloat(document.getElementById('cadWest').value) || 0;
     const D = parseFloat(document.getElementById('cadDiag').value) || 0;
+    const northAngle = parseFloat(document.getElementById('northAngleInput').value) || 0;
 
     const nbNorth = document.getElementById('neighborNorth').value || 'حد بحري';
     const nbSouth = document.getElementById('neighborSouth').value || 'حد قبلي';
@@ -79,7 +196,6 @@ function updateCroquisAndSave() {
     const females = parseInt(document.getElementById('heirsFemale').value) || 0;
     const splitDir = document.getElementById('splitDirection').value;
 
-    // حساب المساحة الرباعية بدقة
     let totalArea = 0;
     if (D > 0) {
         totalArea = calcHeron(N, W, D) + calcHeron(S, E, D);
@@ -95,7 +211,6 @@ function updateCroquisAndSave() {
     document.getElementById('cadTotalAreaBadge').innerText =
         `المساحة: ${totalArea.toFixed(2)} م² (${fqs.text})`;
 
-    // حساب أنصبة الورثة بالشرع الإسلامي (للذكر مثل حظ الأنثيين: الذكر = 2 سهم، الأنثى = 1 سهم)
     const totalShares = (males * 2) + (females * 1);
     const singleShareRatio = totalShares > 0 ? (1 / totalShares) : 0;
     const maleRatio = singleShareRatio * 2;
@@ -108,7 +223,7 @@ function updateCroquisAndSave() {
             fractionText: males === 1 && females === 1 ? 'الثلثان (2/3)' : `2/${totalShares}`,
             ratio: maleRatio,
             area: totalArea * maleRatio,
-            color: '#38bdf8'
+            color: '#22d3ee'
         });
     }
     for (let j = 1; j <= females; j++) {
@@ -123,7 +238,7 @@ function updateCroquisAndSave() {
 
     lastCroquisData = {
         owner, surveyor, location, dateStr,
-        N, S, E, W, nbNorth, nbSouth, nbEast, nbWest,
+        N, S, E, W, northAngle, nbNorth, nbSouth, nbEast, nbWest,
         totalArea, perimeter, fqs, parcels, splitDir
     };
 
@@ -139,12 +254,11 @@ function drawFullSurveyCroquis(data) {
     const H_CANVAS = canvas.height;
     ctx.clearRect(0, 0, W_CANVAS, H_CANVAS);
 
-    // خلفية لوحة الكروكي
-    ctx.fillStyle = '#070b12';
+    ctx.fillStyle = '#040b0e';
     ctx.fillRect(0, 0, W_CANVAS, H_CANVAS);
 
-    // شبكة أوتوكاد خفيفة
-    ctx.strokeStyle = '#111c2d';
+    // شبكة هندسية دقيقة
+    ctx.strokeStyle = '#0c222b';
     ctx.lineWidth = 1;
     for (let x = 0; x < W_CANVAS; x += 25) {
         ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H_CANVAS); ctx.stroke();
@@ -153,23 +267,25 @@ function drawFullSurveyCroquis(data) {
         ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W_CANVAS, y); ctx.stroke();
     }
 
-    // برواز خارجي للوحة الكروكي
-    ctx.strokeStyle = '#f59e0b';
+    // الإطار المزدوج للوحة الكروكي
+    ctx.strokeStyle = '#10b981';
     ctx.lineWidth = 3;
     ctx.strokeRect(10, 10, W_CANVAS - 20, H_CANVAS - 20);
+    ctx.strokeStyle = '#fbbf24';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(15, 15, W_CANVAS - 30, H_CANVAS - 30);
 
-    // رسم سهم الشمال أعلى يسار اللوحة
-    drawNorthArrow(ctx, 65, 65);
+    // رسم سهم الشمال بزاوية الخريطة أو الزاوية المدخلة
+    drawRotatedNorthArrow(ctx, 75, 75, data.northAngle);
 
     const { N, S, E, W, nbNorth, nbSouth, nbEast, nbWest, parcels, splitDir } = data;
     if (N <= 0 || S <= 0 || E <= 0 || W <= 0) return;
 
-    // منطقة الرسم فوق الخرطوشة
     const drawAreaHeight = H_CANVAS - 145;
     const maxHoriz = Math.max(N, S);
     const maxVert = Math.max(E, W);
-    const padX = 150;
-    const padY = 85;
+    const padX = 160;
+    const padY = 90;
 
     const scale = Math.min(
         (W_CANVAS - padX * 2) / maxHoriz,
@@ -177,9 +293,8 @@ function drawFullSurveyCroquis(data) {
     );
 
     const cx = W_CANVAS / 2;
-    const cy = drawAreaHeight / 2 + 10;
+    const cy = drawAreaHeight / 2 + 12;
 
-    // الأركان الأربعة للأرض
     const pNW = { x: cx - (N * scale) / 2, y: cy - (W * scale) / 2 };
     const pNE = { x: cx + (N * scale) / 2, y: cy - (E * scale) / 2 };
     const pSE = { x: cx + (S * scale) / 2, y: cy + (E * scale) / 2 };
@@ -190,7 +305,6 @@ function drawFullSurveyCroquis(data) {
         y: p1.y + (p2.y - p1.y) * t
     });
 
-    // رسم تقسيمات الورثة إن وجدت
     if (parcels.length > 0) {
         let acc = 0;
         parcels.forEach((p) => {
@@ -224,7 +338,7 @@ function drawFullSurveyCroquis(data) {
 
             ctx.strokeStyle = p.color;
             ctx.setLineDash([6, 4]);
-            ctx.lineWidth = 1.8;
+            ctx.lineWidth = 2;
             ctx.stroke();
             ctx.setLineDash([]);
 
@@ -235,133 +349,143 @@ function drawFullSurveyCroquis(data) {
             ctx.font = 'bold 13px Cairo';
             ctx.textAlign = 'center';
             ctx.fillText(`${p.label} [${p.fractionText}]`, midX, midY - 6);
-            ctx.fillStyle = '#f59e0b';
+            ctx.fillStyle = '#fbbf24';
             ctx.font = 'bold 12px Cairo';
             ctx.fillText(`${p.area.toFixed(1)} م²`, midX, midY + 13);
         });
     }
 
-    // رسم حدود الأرض الأربعة الخارجية
+    // حدود الأرض الأربعة
     ctx.beginPath();
     ctx.moveTo(pNW.x, pNW.y);
     ctx.lineTo(pNE.x, pNE.y);
     ctx.lineTo(pSE.x, pSE.y);
     ctx.lineTo(pSW.x, pSW.y);
     ctx.closePath();
-    ctx.strokeStyle = '#f59e0b';
+    ctx.strokeStyle = '#fbbf24';
     ctx.lineWidth = 3.2;
     ctx.stroke();
 
-    // كتابة أطوال الأضلاع الأربعة + أسماء الجيران على كل ضلع
-    ctx.textAlign = 'center';
+    // دوائر أركان الحديد المساحية
+    [pNW, pNE, pSE, pSW].forEach((pt, i) => {
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, 5, 0, Math.PI * 2);
+        ctx.fillStyle = '#f43f5e';
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+    });
 
-    // 1. الضلع الشمالي (فوق) + الجار البحري
+    ctx.textAlign = 'center';
     const topMidX = (pNW.x + pNE.x) / 2;
     const topMidY = Math.min(pNW.y, pNE.y);
-    ctx.fillStyle = '#38bdf8';
+    ctx.fillStyle = '#22d3ee';
     ctx.font = 'bold 14px Cairo';
     ctx.fillText(`الضلع الشمالي (فوق): ${N} م`, topMidX, topMidY - 12);
     ctx.fillStyle = '#10b981';
     ctx.font = 'bold 13px Cairo';
     ctx.fillText(`الحد البحري: ${nbNorth}`, topMidX, topMidY - 32);
 
-    // 2. الضلع الجنوبي (تحت) + الجار القبلي
     const botMidX = (pSW.x + pSE.x) / 2;
     const botMidY = Math.max(pSW.y, pSE.y);
-    ctx.fillStyle = '#38bdf8';
+    ctx.fillStyle = '#22d3ee';
     ctx.font = 'bold 14px Cairo';
     ctx.fillText(`الضلع الجنوبي (تحت): ${S} م`, botMidX, botMidY + 22);
     ctx.fillStyle = '#10b981';
     ctx.font = 'bold 13px Cairo';
     ctx.fillText(`الحد القبلي: ${nbSouth}`, botMidX, botMidY + 42);
 
-    // 3. الضلع الشرقي (يمين) + الجار الشرقي
     const rightMidX = Math.max(pNE.x, pSE.x);
     const rightMidY = (pNE.y + pSE.y) / 2;
-    ctx.fillStyle = '#38bdf8';
+    ctx.fillStyle = '#22d3ee';
     ctx.font = 'bold 14px Cairo';
-    ctx.fillText(`الشرقي (يمين): ${E} م`, rightMidX + 75, rightMidY - 8);
+    ctx.fillText(`الشرقي (يمين): ${E} م`, rightMidX + 78, rightMidY - 8);
     ctx.fillStyle = '#10b981';
     ctx.font = 'bold 12px Cairo';
-    ctx.fillText(`${nbEast}`, rightMidX + 75, rightMidY + 14);
+    ctx.fillText(`${nbEast}`, rightMidX + 78, rightMidY + 14);
 
-    // 4. الضلع الغربي (شمال) + الجار الغربي
     const leftMidX = Math.min(pNW.x, pSW.x);
     const leftMidY = (pNW.y + pSW.y) / 2;
-    ctx.fillStyle = '#38bdf8';
+    ctx.fillStyle = '#22d3ee';
     ctx.font = 'bold 14px Cairo';
-    ctx.fillText(`الغربي (شمال): ${W} م`, leftMidX - 75, leftMidY - 8);
+    ctx.fillText(`الغربي (شمال): ${W} م`, leftMidX - 78, leftMidY - 8);
     ctx.fillStyle = '#10b981';
     ctx.font = 'bold 12px Cairo';
-    ctx.fillText(`${nbWest}`, leftMidX - 75, leftMidY + 14);
+    ctx.fillText(`${nbWest}`, leftMidX - 78, leftMidY + 14);
 
-    // ==================== رسم الخرطوشة الهندسية أسفل اللوحة (Title Block) ====================
+    // الخرطوشة الهندسية أسفل اللوحة
     const tbY = H_CANVAS - 125;
-    const tbH = 115;
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(10, tbY, W_CANVAS - 20, tbH);
-    ctx.strokeStyle = '#f59e0b';
+    const tbH = 110;
+    ctx.fillStyle = '#08181f';
+    ctx.fillRect(15, tbY, W_CANVAS - 30, tbH);
+    ctx.strokeStyle = '#10b981';
     ctx.lineWidth = 2;
-    ctx.strokeRect(10, tbY, W_CANVAS - 20, tbH);
+    ctx.strokeRect(15, tbY, W_CANVAS - 30, tbH);
 
-    // خطوط تقسيم الخرطوشة
     ctx.beginPath();
-    ctx.moveTo(280, tbY); ctx.lineTo(280, tbY + tbH);
-    ctx.moveTo(550, tbY); ctx.lineTo(550, tbY + tbH);
+    ctx.moveTo(290, tbY); ctx.lineTo(290, tbY + tbH);
+    ctx.moveTo(565, tbY); ctx.lineTo(565, tbY + tbH);
     ctx.stroke();
 
     ctx.textAlign = 'right';
-    // القسم الأيمن: المالك والموقع
-    ctx.fillStyle = '#f59e0b';
+    ctx.fillStyle = '#fbbf24';
     ctx.font = 'bold 14px Cairo';
-    ctx.fillText(`المالك: ${data.owner}`, W_CANVAS - 25, tbY + 30);
+    ctx.fillText(`المالك: ${data.owner}`, W_CANVAS - 30, tbY + 30);
     ctx.fillStyle = '#f8fafc';
     ctx.font = '13px Cairo';
-    ctx.fillText(`الموقع: ${data.location}`, W_CANVAS - 25, tbY + 60);
-    ctx.fillText(`التاريخ: ${data.dateStr}`, W_CANVAS - 25, tbY + 90);
+    ctx.fillText(`الموقع: ${data.location}`, W_CANVAS - 30, tbY + 58);
+    ctx.fillText(`التاريخ: ${data.dateStr} | زاوية الشمال: ${data.northAngle}°`, W_CANVAS - 30, tbY + 86);
 
-    // القسم الأوسط: المساحة الكلية والأطوال
-    ctx.fillStyle = '#38bdf8';
+    ctx.fillStyle = '#22d3ee';
     ctx.font = 'bold 14px Cairo';
-    ctx.fillText(`المساحة بالمتر: ${data.totalArea.toFixed(2)} م²`, 535, tbY + 30);
+    ctx.fillText(`المساحة بالمتر: ${data.totalArea.toFixed(2)} م²`, 550, tbY + 30);
     ctx.fillStyle = '#10b981';
-    ctx.fillText(`بالفدان: ${data.fqs.text}`, 535, tbY + 60);
+    ctx.fillText(`بالفدان: ${data.fqs.text}`, 550, tbY + 58);
     ctx.fillStyle = '#cbd5e1';
-    ctx.fillText(`المحيط الكلي: ${data.perimeter.toFixed(2)} متر طولي`, 535, tbY + 90);
+    ctx.fillText(`المحيط الكلي: ${data.perimeter.toFixed(2)} متر طولي`, 550, tbY + 86);
 
-    // القسم الأيسر: المهندس المساح والختم
-    ctx.fillStyle = '#f59e0b';
-    ctx.font = 'bold 14px Cairo';
-    ctx.fillText(`المهندس المسّاح:`, 265, tbY + 30);
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = 'bold 13px Cairo';
+    ctx.fillText(`المهندس المسّاح القائم بالرفع:`, 275, tbY + 28);
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 15px Cairo';
-    ctx.fillText(`${data.surveyor}`, 265, tbY + 60);
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '12px Cairo';
-    ctx.fillText(`منصة المسّاح الرقمي PRO`, 265, tbY + 90);
+    ctx.fillText(`${data.surveyor}`, 275, tbY + 56);
+    ctx.fillStyle = '#10b981';
+    ctx.font = 'bold 11px Cairo';
+    ctx.fillText(`المسّاح الرقمي PRO - النسخة التجريبية`, 275, tbY + 86);
 }
 
-function drawNorthArrow(ctx, x, y) {
+function drawRotatedNorthArrow(ctx, x, y, angleDeg = 0) {
     ctx.save();
-    ctx.strokeStyle = '#f59e0b';
-    ctx.fillStyle = '#f59e0b';
+    ctx.translate(x, y);
+    ctx.rotate((angleDeg * Math.PI) / 180);
+
+    ctx.strokeStyle = '#fbbf24';
+    ctx.fillStyle = '#10b981';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(x, y, 22, 0, Math.PI * 2);
+    ctx.arc(0, 0, 26, 0, Math.PI * 2);
     ctx.stroke();
 
     ctx.beginPath();
-    ctx.moveTo(x, y - 16);
-    ctx.lineTo(x - 7, y + 10);
-    ctx.lineTo(x, y + 4);
-    ctx.lineTo(x + 7, y + 10);
+    ctx.moveTo(0, -20);
+    ctx.lineTo(-8, 12);
+    ctx.lineTo(0, 5);
+    ctx.lineTo(8, 12);
     ctx.closePath();
     ctx.fill();
 
-    ctx.font = 'bold 13px Cairo';
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = 'bold 12px Cairo';
     ctx.textAlign = 'center';
-    ctx.fillText('N شمال', x, y - 28);
+    ctx.fillText('N', 0, -29);
     ctx.restore();
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px Cairo';
+    ctx.textAlign = 'center';
+    ctx.fillText(`شمال (${angleDeg}°)`, x, y + 42);
 }
 
 function renderCroquisReport(data, males, females, totalShares) {
@@ -384,15 +508,15 @@ function renderCroquisReport(data, males, females, totalShares) {
             <div class="sharia-card" style="border-right-color:${p.color}">
                 <strong>${p.label}</strong> (${p.fractionText})<br>
                 المساحة: <b>${p.area.toFixed(2)} م²</b><br>
-                <small style="color:#f59e0b">${metersToFQS(p.area).text}</small><br>
-                <small style="color:#38bdf8">${sideInfo}</small>
+                <small style="color:#fbbf24">${metersToFQS(p.area).text}</small><br>
+                <small style="color:#22d3ee">${sideInfo}</small>
             </div>
         `;
     });
 
     box.innerHTML = `
-        <h3 style="color:#f59e0b; margin-bottom:8px;">بيانات الكروكي المساحي والفرز الشرعي</h3>
-        <p><b>المالك:</b> ${data.owner} | <b>المهندس المسّاح:</b> ${data.surveyor} | <b>الموقع:</b> ${data.location}</p>
+        <h3 style="color:#fbbf24; margin-bottom:8px;">تقرير الكروكي المساحي والفرز الشرعي</h3>
+        <p><b>المالك:</b> ${data.owner} | <b>المهندس المسّاح:</b> ${data.surveyor} | <b>زاوية الشمال:</b> ${data.northAngle}°</p>
         <p style="margin:6px 0;"><b>الحدود الأربعة:</b> بحري: (${data.nbNorth}) | قبلي: (${data.nbSouth}) | شرقي: (${data.nbEast}) | غربي: (${data.nbWest})</p>
         ${shariaNote}
         <div class="sharia-grid">${cardsHtml}</div>
@@ -429,34 +553,39 @@ function exportCroquisDXF() {
     a.click();
 }
 
-// ==================== 2. الرسم بالكاد بمساعدة الذكاء الاصطناعي (AutoCAD AI) ====================
+// ==================== 2. الأوتوكاد الذكي فائق الدقة الهندسية (High-Precision AutoCAD AI) ====================
 function generateAiCadPlan() {
     const north = parseFloat(document.getElementById('aiNorth').value) || 12;
     const south = parseFloat(document.getElementById('aiSouth').value) || 12;
-    const east = parseFloat(document.getElementById('aiEast').value) || 20;
-    const west = parseFloat(document.getElementById('aiWest').value) || 20;
+    const east = parseFloat(document.getElementById('aiEast').value) || 18;
+    const west = parseFloat(document.getElementById('aiWest').value) || 18;
 
     const roomsCount = parseInt(document.getElementById('aiRooms').value) || 3;
     const bathsCount = parseInt(document.getElementById('aiBaths').value) || 2;
+    const wallThick = parseFloat(document.getElementById('aiWallThickness').value) || 0.25;
+    const showAxes = document.getElementById('aiShowAxes').value === 'yes';
     const stairPos = document.getElementById('aiStairPos').value;
     const hasShaft = document.getElementById('aiShaft').value === 'yes';
 
     const avgWidth = (north + south) / 2;
     const avgDepth = (east + west) / 2;
     const totalArea = avgWidth * avgDepth;
+    const netArea = (avgWidth - wallThick * 2) * (avgDepth - wallThick * 2);
 
     document.getElementById('aiCadSummaryBadge').innerText =
-        `المساحة: ${totalArea.toFixed(1)} م² (الأضلاع: ${north}×${south}×${east}×${west} م)`;
+        `المساحة الكلية: ${totalArea.toFixed(1)} م² | الصافية: ${netArea.toFixed(1)} م² (سمك الحائط ${wallThick * 100}سم)`;
 
     const canvas = document.getElementById('aiCadCanvas');
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // خلفية الكاد المعماري
-    ctx.fillStyle = '#060a10';
+    // خلفية الأوتوكاد الاحترافية
+    ctx.fillStyle = '#050b11';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.strokeStyle = '#111c2d';
+    // شبكة المليمتر والوحدات الهندسية
+    ctx.strokeStyle = '#0d1b26';
+    ctx.lineWidth = 1;
     for (let x = 0; x < canvas.width; x += 20) {
         ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
     }
@@ -464,7 +593,7 @@ function generateAiCadPlan() {
         ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
     }
 
-    const pad = 75;
+    const pad = 95;
     const scale = Math.min(
         (canvas.width - pad * 2) / Math.max(north, south),
         (canvas.height - pad * 2) / Math.max(east, west)
@@ -472,11 +601,70 @@ function generateAiCadPlan() {
 
     const startX = (canvas.width - avgWidth * scale) / 2;
     const startY = (canvas.height - avgDepth * scale) / 2;
+    const wallPx = Math.max(4, wallThick * scale);
 
     lastAiPlanBoxes = [];
 
-    // دالة لرسم فراغ معماري بحوائط مزدوجة وأبعاد
-    function drawRoomBox(rx, ry, rw, rh, title, strokeCol = '#38bdf8', fillCol = 'rgba(56,189,248,0.08)') {
+    // 1. رسم المحاور الهندسية (Axes Grid: A, B, C & 1, 2, 3, 4)
+    if (showAxes) {
+        const xAxes = [0, avgWidth * 0.32, avgWidth * 0.66, avgWidth];
+        const xLabels = ['A', 'B', 'C', 'D'];
+        xAxes.forEach((ax, i) => {
+            const sx = startX + ax * scale;
+            ctx.save();
+            ctx.strokeStyle = 'rgba(244, 63, 94, 0.35)';
+            ctx.setLineDash([8, 4, 2, 4]);
+            ctx.beginPath();
+            ctx.moveTo(sx, startY - 38);
+            ctx.lineTo(sx, startY + avgDepth * scale + 20);
+            ctx.stroke();
+
+            // دائرة المحور العلوية
+            ctx.setLineDash([]);
+            ctx.strokeStyle = '#f43f5e';
+            ctx.fillStyle = '#050b11';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(sx, startY - 48, 11, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = '#f43f5e';
+            ctx.font = 'bold 11px Cairo';
+            ctx.textAlign = 'center';
+            ctx.fillText(xLabels[i], sx, startY - 44);
+            ctx.restore();
+        });
+
+        const yAxes = [0, avgDepth * 0.38, avgDepth * 0.62, avgDepth];
+        const yLabels = ['1', '2', '3', '4'];
+        yAxes.forEach((ay, i) => {
+            const sy = startY + ay * scale;
+            ctx.save();
+            ctx.strokeStyle = 'rgba(244, 63, 94, 0.35)';
+            ctx.setLineDash([8, 4, 2, 4]);
+            ctx.beginPath();
+            ctx.moveTo(startX - 38, sy);
+            ctx.lineTo(startX + avgWidth * scale + 20, sy);
+            ctx.stroke();
+
+            ctx.setLineDash([]);
+            ctx.strokeStyle = '#f43f5e';
+            ctx.fillStyle = '#050b11';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(startX - 48, sy, 11, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = '#f43f5e';
+            ctx.font = 'bold 11px Cairo';
+            ctx.textAlign = 'center';
+            ctx.fillText(yLabels[i], startX - 48, sy + 4);
+            ctx.restore();
+        });
+    }
+
+    // دالة رسم الغرف بحوائط مزدوجة دقيقة وشبابيك وأبواب
+    function drawPrecisionRoom(rx, ry, rw, rh, title, layerColor = '#22d3ee', isStair = false, isShaft = false) {
         const sx = startX + rx * scale;
         const sy = startY + ry * scale;
         const sw = rw * scale;
@@ -484,83 +672,153 @@ function generateAiCadPlan() {
 
         lastAiPlanBoxes.push({ rx, ry, rw, rh, title });
 
-        ctx.fillStyle = fillCol;
+        ctx.fillStyle = isShaft ? 'rgba(244,63,94,0.12)' : 'rgba(34,211,238,0.05)';
         ctx.fillRect(sx, sy, sw, sh);
 
-        // حائط خارجي وداخلي (Double Wall CAD Style)
-        ctx.strokeStyle = strokeCol;
-        ctx.lineWidth = 3;
+        // الحائط الخارجي والداخلي بسمك هندسي
+        ctx.strokeStyle = layerColor;
+        ctx.lineWidth = 2.4;
         ctx.strokeRect(sx, sy, sw, sh);
-        ctx.strokeStyle = '#cbd5e1';
+
+        ctx.strokeStyle = '#94a3b8';
         ctx.lineWidth = 1;
-        ctx.strokeRect(sx + 3, sy + 3, sw - 6, sh - 6);
+        ctx.strokeRect(sx + wallPx, sy + wallPx, sw - wallPx * 2, sh - wallPx * 2);
 
-        // قوس الباب المعماري
-        ctx.beginPath();
-        ctx.strokeStyle = '#f59e0b';
-        ctx.arc(sx + 10, sy + sh - 10, 14, -Math.PI / 2, 0);
-        ctx.stroke();
+        if (isShaft) {
+            // علامة المنور الهندسية (X)
+            ctx.beginPath();
+            ctx.strokeStyle = '#f43f5e';
+            ctx.moveTo(sx, sy); ctx.lineTo(sx + sw, sy + sh);
+            ctx.moveTo(sx + sw, sy); ctx.lineTo(sx, sy + sh);
+            ctx.stroke();
+        } else if (isStair) {
+            // رسم درجات السلم الهندسية (قلبتين وصدفة)
+            ctx.strokeStyle = '#fbbf24';
+            ctx.lineWidth = 1.2;
+            const steps = 8;
+            for (let s = 1; s < steps; s++) {
+                const stepY = sy + wallPx + (s * (sh - wallPx * 2)) / steps;
+                ctx.beginPath();
+                ctx.moveTo(sx + wallPx + 6, stepY);
+                ctx.lineTo(sx + sw - wallPx - 6, stepY);
+                ctx.stroke();
+            }
+        } else {
+            // رسم رمز الباب بزاوية 90 درجة وقوس الفتح
+            const doorW = Math.min(22, sw * 0.22);
+            const dx = sx + wallPx + 8;
+            const dy = sy + sh - wallPx;
+            ctx.strokeStyle = '#fbbf24';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(dx, dy);
+            ctx.lineTo(dx, dy - doorW);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(dx, dy, doorW, -Math.PI / 2, 0);
+            ctx.stroke();
+        }
 
-        // اسم الغرفة وأبعادها
+        // كتابة اسم الغرفة والأبعاد الصافية والمحورية
+        const netW = Math.max(0.5, rw - wallThick);
+        const netH = Math.max(0.5, rh - wallThick);
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 13px Cairo';
+        ctx.font = 'bold 12px Cairo';
         ctx.textAlign = 'center';
-        ctx.fillText(title, sx + sw / 2, sy + sh / 2 - 5);
-        ctx.fillStyle = '#f59e0b';
-        ctx.font = '12px Cairo';
-        ctx.fillText(`${rw.toFixed(1)}م × ${rh.toFixed(1)}م`, sx + sw / 2, sy + sh / 2 + 14);
+        ctx.fillText(title, sx + sw / 2, sy + sh / 2 - 4);
+        if (!isShaft) {
+            ctx.fillStyle = '#fbbf24';
+            ctx.font = '11px Cairo';
+            ctx.fillText(`${netW.toFixed(2)}م × ${netH.toFixed(2)}م`, sx + sw / 2, sy + sh / 2 + 12);
+        }
     }
 
-    // تقسيم ذكي للمسقط المعماري بناءً على الأضلاع الأربعة
-    const frontZoneH = avgDepth * 0.38;
-    const midZoneH = avgDepth * 0.24;
-    const backZoneH = avgDepth * 0.38;
+    const frontH = avgDepth * 0.38;
+    const midH = avgDepth * 0.24;
+    const backH = avgDepth * 0.38;
 
-    // 1. المنطقة الأمامية (الريسبشن + السلم أو الغرفة الأمامية)
+    // توزيع المنطقة الأمامية
     const stairW = avgWidth * 0.28;
     const recepW = avgWidth - stairW;
     if (stairPos === 'front') {
-        drawRoomBox(0, 0, stairW, frontZoneH * 0.75, 'سلم ومدخل', '#a855f7', 'rgba(168,85,247,0.12)');
-        drawRoomBox(stairW, 0, recepW, frontZoneH, 'ريسبشن واستقبال', '#10b981', 'rgba(16,185,129,0.1)');
+        drawPrecisionRoom(0, 0, stairW, frontH * 0.82, 'سلم ومدخل', '#a855f7', true, false);
+        drawPrecisionRoom(stairW, 0, recepW, frontH, 'ريسبشن واستقبال', '#10b981');
     } else {
-        drawRoomBox(0, 0, avgWidth * 0.65, frontZoneH, 'ريسبشن كبير', '#10b981', 'rgba(16,185,129,0.1)');
-        drawRoomBox(avgWidth * 0.65, 0, avgWidth * 0.35, frontZoneH, 'غرفة معيشة / مكتب', '#38bdf8');
+        drawPrecisionRoom(0, 0, avgWidth * 0.66, frontH, 'ريسبشن واستقبال', '#10b981');
+        drawPrecisionRoom(avgWidth * 0.66, 0, avgWidth * 0.34, frontH, 'مجلس / مكتب', '#22d3ee');
     }
 
-    // 2. المنطقة الوسطى (مطبخ + حمامات + صالة توزيع + منور)
-    const serviceW = avgWidth * 0.38;
+    // توزيع المنطقة الوسطى
+    const serviceW = avgWidth * 0.40;
     const hallW = avgWidth - serviceW;
-    drawRoomBox(0, frontZoneH, hallW, midZoneH, 'طرقة وصالة توزيع', '#94a3b8', 'rgba(148,163,184,0.06)');
+    drawPrecisionRoom(0, frontH, hallW, midH, 'صالة توزيع ومعيشة', '#94a3b8');
 
-    const kitchenW = serviceW * 0.55;
-    const bathW = serviceW * 0.45;
-    drawRoomBox(hallW, frontZoneH, kitchenW, midZoneH, 'مطبخ', '#f59e0b', 'rgba(245,158,11,0.1)');
-    drawRoomBox(hallW + kitchenW, frontZoneH, bathW, midZoneH, bathsCount > 1 ? `حمام (${bathsCount})` : 'حمام رئيسي', '#06b6d4');
+    const kitchW = serviceW * 0.52;
+    const bathW = serviceW * 0.48;
+    drawPrecisionRoom(hallW, frontH, kitchW, midH, 'مطبخ', '#fbbf24');
+    drawPrecisionRoom(hallW + kitchW, frontH, bathW, midH, bathsCount > 1 ? `حمام (${bathsCount})` : 'حمام', '#22d3ee');
 
     if (hasShaft) {
-        drawRoomBox(hallW + kitchenW, frontZoneH, bathW * 0.45, midZoneH * 0.45, 'منور', '#ef4444', 'rgba(239,68,68,0.15)');
+        drawPrecisionRoom(hallW + kitchW + bathW * 0.55, frontH, bathW * 0.45, midH * 0.48, 'منور', '#f43f5e', false, true);
     }
 
-    // 3. المنطقة الخلفية (توزيع غرف النوم بالتساوي)
-    const singleRoomW = avgWidth / roomsCount;
+    // توزيع غرف النوم الخلفية
+    const roomW = avgWidth / roomsCount;
     for (let i = 0; i < roomsCount; i++) {
-        drawRoomBox(i * singleRoomW, frontZoneH + midZoneH, singleRoomW, backZoneH, `غرفة نوم (${i + 1})`, '#38bdf8');
+        drawPrecisionRoom(i * roomW, frontH + midH, roomW, backH, `غرفة نوم (${i + 1})`, '#22d3ee');
     }
 
-    // كتابة الأضلاع الأربعة الخارجية على الرسمة المعمارية
-    ctx.fillStyle = '#f59e0b';
-    ctx.font = 'bold 14px Cairo';
+    // رسم الأعمدة الخرسانية المسلحة في التقاطعات
+    if (showAxes) {
+        const colX = [0, avgWidth * 0.32, avgWidth * 0.66, avgWidth];
+        const colY = [0, frontH, frontH + midH, avgDepth];
+        ctx.fillStyle = '#f43f5e';
+        colX.forEach(cx => {
+            colY.forEach(cy => {
+                const px = startX + cx * scale - 4;
+                const py = startY + cy * scale - 4;
+                ctx.fillRect(px, py, 8, 8);
+            });
+        });
+    }
+
+    // رسم خطوط الأبعاد الهندسية الخارجية للأضلاع الأربعة (Dimension Lines)
+    drawCadDimensionLine(ctx, startX, startY + avgDepth * scale + 28, startX + avgWidth * scale, startY + avgDepth * scale + 28, `الضلع الجنوبي (تحت): ${south} م`);
+    drawCadDimensionLine(ctx, startX, startY - 22, startX + avgWidth * scale, startY - 22, `الضلع الشمالي (الواجهة): ${north} م`);
+
+    ctx.fillStyle = '#10b981';
+    ctx.font = 'bold 13px Cairo';
     ctx.textAlign = 'center';
-    ctx.fillText(`الضلع العلوي (الواجهة): ${north} م`, startX + (avgWidth * scale) / 2, startY - 18);
-    ctx.fillText(`الضلع السفلي (الخلفي): ${south} م`, startX + (avgWidth * scale) / 2, startY + (avgDepth * scale) + 28);
-    ctx.fillText(`الأيمن: ${east} م`, startX + (avgWidth * scale) + 48, startY + (avgDepth * scale) / 2);
-    ctx.fillText(`الأيسر: ${west} م`, startX - 48, startY + (avgDepth * scale) / 2);
+    ctx.fillText(`الشرقي (يمين): ${east} م`, startX + avgWidth * scale + 55, startY + (avgDepth * scale) / 2);
+    ctx.fillText(`الغربي (شمال): ${west} م`, startX - 55, startY + (avgDepth * scale) / 2);
 
     document.getElementById('aiCadReport').innerHTML = `
-        <h3 style="color:#06b6d4; margin-bottom:8px;">تقرير المساعد الذكي للتصميم المعماري (AutoCAD AI)</h3>
-        <p>تم توليد المسقط الهندسي بناءً على الأضلاع الأربعة: <b>شمالي ${north}م × جنوبي ${south}م × شرقي ${east}م × غربي ${west}م</b> بإجمالي مساحة <b>${totalArea.toFixed(1)} م²</b>.</p>
-        <p style="margin-top:6px; color:#cbd5e1;">يشمل التصميم: ريسبشن على الواجهة، ${roomsCount} غرف نوم، ${bathsCount} حمام، مطبخ، وصالة توزيع ${hasShaft ? 'مع منور خدمة وتهوية' : ''}.</p>
+        <h3 style="color:#fbbf24; margin-bottom:8px;">التقرير الهندسي الدقيق — AutoCAD AI (م. أحمد سمير)</h3>
+        <p><b>الأبعاد الخارجية للأضلاع الأربعة:</b> شمالي ${north}م × جنوبي ${south}م × شرقي ${east}م × غربي ${west}م | <b>المساحة الكلية:</b> ${totalArea.toFixed(2)} م² | <b>المساحة الصافية:</b> ${netArea.toFixed(2)} م².</p>
+        <p style="margin-top:6px; color:#cbd5e1;">تم توقيع المحاور الإنشائية (A-D / 1-4)، الأعمدة الخرسانية المسلحة (16 عمود)، سمك الحوائط (${wallThick * 100} سم)، وتوزيع ${roomsCount} غرف نوم + ${bathsCount} حمام + مطبخ + ريسبشن.</p>
     `;
+}
+
+function drawCadDimensionLine(ctx, x1, y1, x2, y2, text) {
+    ctx.save();
+    ctx.strokeStyle = '#10b981';
+    ctx.fillStyle = '#10b981';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+
+    // شرطات الأوتوكاد المائلة (Architectural Ticks)
+    ctx.beginPath();
+    ctx.moveTo(x1 - 4, y1 + 4); ctx.lineTo(x1 + 4, y1 - 4);
+    ctx.moveTo(x2 - 4, y2 + 4); ctx.lineTo(x2 + 4, y2 - 4);
+    ctx.stroke();
+
+    ctx.font = 'bold 12px Cairo';
+    ctx.textAlign = 'center';
+    ctx.fillText(text, (x1 + x2) / 2, y1 - 6);
+    ctx.restore();
 }
 
 function exportAiPlanDXF() {
@@ -578,7 +836,7 @@ function exportAiPlanDXF() {
     const blob = new Blob([dxf], { type: 'application/dxf' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `AutoCAD_AI_Plan.dxf`;
+    a.download = `AutoCAD_Precision_Eng_AhmedSamir.dxf`;
     a.click();
 }
 
@@ -638,9 +896,9 @@ function renderTriangles() {
 
     const fqs = metersToFQS(totalArea);
     document.getElementById('triTotalSummary').innerHTML = `
-        <h3 style="color:#38bdf8;">إجمالي مساحة المثلثات (${trianglesList.length} مثلث)</h3>
+        <h3 style="color:#22d3ee;">إجمالي مساحة المثلثات (${trianglesList.length} مثلث)</h3>
         <p style="font-size:1.2rem; margin:8px 0;"><b>${totalArea.toFixed(2)} متر مربع</b></p>
-        <p style="color:#f59e0b; font-weight:700;">${fqs.text}</p>
+        <p style="color:#fbbf24; font-weight:700;">${fqs.text}</p>
     `;
 
     const lastTri = trianglesList[trianglesList.length - 1] || { a: 30, b: 40, c: 50 };
@@ -681,13 +939,13 @@ function drawSingleTriangle(a, b, c) {
     ctx.lineTo(s2.x, s2.y);
     ctx.lineTo(s3.x, s3.y);
     ctx.closePath();
-    ctx.fillStyle = 'rgba(56, 189, 248, 0.18)';
+    ctx.fillStyle = 'rgba(16, 185, 129, 0.18)';
     ctx.fill();
-    ctx.strokeStyle = '#38bdf8';
+    ctx.strokeStyle = '#10b981';
     ctx.lineWidth = 3;
     ctx.stroke();
 
-    ctx.fillStyle = '#f59e0b';
+    ctx.fillStyle = '#fbbf24';
     ctx.font = 'bold 14px Cairo';
     ctx.fillText(`ضلع C: ${c} م`, (s1.x + s2.x) / 2, (s1.y + s2.y) / 2 + 22);
     ctx.fillText(`ضلع B: ${b} م`, (s1.x + s3.x) / 2 - 35, (s1.y + s3.y) / 2 - 8);
@@ -706,7 +964,7 @@ function initMapIfNeeded() {
 
     surveyMap.on('click', (e) => {
         mapPoints.push([e.latlng.lat, e.latlng.lng]);
-        const marker = L.circleMarker(e.latlng, { radius: 6, color: '#f59e0b', fillOpacity: 1 }).addTo(surveyMap);
+        const marker = L.circleMarker(e.latlng, { radius: 6, color: '#fbbf24', fillOpacity: 1 }).addTo(surveyMap);
         mapMarkers.push(marker);
         updateMapPolygon();
     });
@@ -719,7 +977,7 @@ function updateMapPolygon() {
         return;
     }
 
-    mapPolygonLayer = L.polygon(mapPoints, { color: '#f59e0b', fillColor: '#38bdf8', fillOpacity: 0.3 }).addTo(surveyMap);
+    mapPolygonLayer = L.polygon(mapPoints, { color: '#fbbf24', fillColor: '#10b981', fillOpacity: 0.3 }).addTo(surveyMap);
 
     if (mapPoints.length >= 3) {
         const areaM2 = calcSphericalPolygonArea(mapPoints);
@@ -857,10 +1115,10 @@ function calcCogo() {
     if (azimuth < 0) azimuth += 360;
 
     document.getElementById('cogoResults').innerHTML = `
-        <h3 style="color:#ec4899; margin-bottom:10px;">نتائج الرصد والحساب (Inverse COGO)</h3>
+        <h3 style="color:#f43f5e; margin-bottom:10px;">نتائج الرصد والحساب (Inverse COGO)</h3>
         <p><b>فرق الشرقيات ($\Delta E$):</b> ${dE.toFixed(3)} م</p>
         <p><b>فرق الشماليات ($\Delta N$):</b> ${dN.toFixed(3)} م</p>
-        <p style="font-size:1.15rem; color:#f59e0b; margin:8px 0;"><b>المسافة الأفقية: ${dist.toFixed(3)} متر</b></p>
+        <p style="font-size:1.15rem; color:#fbbf24; margin:8px 0;"><b>المسافة الأفقية: ${dist.toFixed(3)} متر</b></p>
         <p><b>الانحراف الدائري (Azimuth):</b> ${azimuth.toFixed(4)}°</p>
     `;
 }
@@ -887,7 +1145,7 @@ function convertFromFQS() {
 
 function renderConverterSummary(m2, fqs) {
     document.getElementById('convDetailedOutput').innerHTML = `
-        <h3 style="color:#eab308; margin-bottom:10px;">ملخص التحويل المساحي</h3>
+        <h3 style="color:#fbbf24; margin-bottom:10px;">ملخص التحويل المساحي</h3>
         <p><b>بالمتر المربع:</b> ${m2.toFixed(2)} م²</p>
         <p><b>بالفدان والقيراط والسهم:</b> ${fqs.text}</p>
         <p><b>بالهكتار:</b> ${(m2 / 10000).toFixed(4)} هكتار</p>
@@ -895,7 +1153,7 @@ function renderConverterSummary(m2, fqs) {
     `;
 }
 
-// ==================== الحفظ التلقائي (LocalStorage) ====================
+// ==================== الحفظ التلقائي ====================
 function saveStateToStorage() {
     const state = {
         ownerName: document.getElementById('ownerName').value,
@@ -905,6 +1163,7 @@ function saveStateToStorage() {
         cadSouth: document.getElementById('cadSouth').value,
         cadEast: document.getElementById('cadEast').value,
         cadWest: document.getElementById('cadWest').value,
+        northAngleInput: document.getElementById('northAngleInput').value,
         neighborNorth: document.getElementById('neighborNorth').value,
         neighborSouth: document.getElementById('neighborSouth').value,
         neighborEast: document.getElementById('neighborEast').value,
@@ -914,17 +1173,27 @@ function saveStateToStorage() {
         trianglesList,
         levelRows
     };
-    localStorage.setItem('digital_surveyor_pro_v3', JSON.stringify(state));
+    localStorage.setItem('digital_surveyor_pro_v4', JSON.stringify(state));
 }
 
 function loadSavedState() {
-    const raw = localStorage.getItem('digital_surveyor_pro_v3');
+    const savedTheme = localStorage.getItem('ds_theme_pref');
+    if (savedTheme) {
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        const found = themesList.findIndex(t => t.id === savedTheme);
+        if (found !== -1) {
+            currentThemeIdx = found;
+            document.getElementById('themeNameLabel').innerText = themesList[found].name;
+        }
+    }
+
+    const raw = localStorage.getItem('digital_surveyor_pro_v4');
     if (raw) {
         try {
             const d = JSON.parse(raw);
             const fields = [
                 'ownerName', 'surveyorName', 'landLocation',
-                'cadNorth', 'cadSouth', 'cadEast', 'cadWest',
+                'cadNorth', 'cadSouth', 'cadEast', 'cadWest', 'northAngleInput',
                 'neighborNorth', 'neighborSouth', 'neighborEast', 'neighborWest',
                 'heirsMale', 'heirsFemale'
             ];
@@ -943,7 +1212,7 @@ function loadSavedState() {
 
 function clearSavedData() {
     if (confirm("هل تريد مسح جميع البيانات المحفوظة وإعادة ضبط البرنامج؟")) {
-        localStorage.removeItem('digital_surveyor_pro_v3');
+        localStorage.removeItem('digital_surveyor_pro_v4');
         location.reload();
     }
 }
