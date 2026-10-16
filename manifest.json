@@ -1,0 +1,17 @@
+{
+  "name": "المسّاح الرقمي PRO",
+  "short_name": "المسّاح الرقمي",
+  "description": "المنصة الهندسية والمساحية المتكاملة للرسم بالكاد وحساب المساحات والفرز الشرعي",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2622/2622238.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
